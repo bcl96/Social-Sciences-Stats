@@ -1,0 +1,257 @@
+---
+title: "In-class exercise: Think of research questions and variables of interest using ELS:2002 data"
+urlcolor: blue
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true 
+    number_sections: true
+    highlight: tango 
+    df_print: tibble #options: default, tibble, paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# remove scientific notation
+options(scipen=999)
+
+options(tibble.width = Inf, width = 10000) # Code necessary to enable scroll right for printing of data frames
+```
+
+<!-- Code to enable scroll right for printing of data frames -->
+<style>
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: auto !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+</style>
+
+# Instructions  
+
+- Run the below code, which loads libraries and data
+- Read the section "ELS:2002 data", which provides and introduction to ELS:2002 and also presents some example causal research questions using ELS:2002 data (run the code chunks on your own)
+- In the section "Think of research questions and variable", your task is to:
+  - write your notes/ideas about dependent variables of interest, independent variables of interest, research questions of interest, populations of interest in the google doc for your group
+
+
+## Load libraries and data
+
+Please run the code in the following chunk, which does the following:
+
+- Loads libraries (install if necessary)
+- Runs *R* script that creates data frames from ELS:2002 data
+
+
+```{r, include= FALSE}
+#-----------------------------------------------------------------------------
+# Load libraries
+#-----------------------------------------------------------------------------
+
+  # install packages if you haven't already
+    #install.packages('tidyverse')
+    #install.packages('labelled')
+    #install.packages('haven')
+
+  library(tidyverse)
+  library(labelled)
+  library(haven)
+
+
+#-----------------------------------------------------------------------------
+# LOAD ELS DATA
+#-----------------------------------------------------------------------------
+
+# RUN SCRIPT THAT CREATES STUDENT-LEVEL DATA FRAME CONTAINING ALL VARIABLES AND CREATES DATA FRAME WITH A SUBSET OF VARIABLES
+
+  #NOTE: this script will take 30 seconds to a minute to run because loading a dataset w/ about 16,000 observations and 4,000 variables from a website
+
+  source(file = url('https://github.com/anyone-can-cook/educ152/raw/main/scripts/els/read_els_by_pets.R'))
+    #source(file = file.path('.','..','..','scripts','els','read_els_by_pets.R'))
+
+# Create a dataframe df_els_stu_fac that has categorical variables as factor class variables rather than labelled class variables
+  df_els_stu_fac <- as_factor(df_els_stu, only_labelled = TRUE)
+  # convert continuous variables we know we want numeric back to numeric
+  for (v in c('bytxmstd','bytxrstd','f1txmstd','f3stloanamt','f3stloanpay','f3ern2011','f3tzrectrans','f3tzreqtrans','f3tzschtotal')) {
+    df_els_stu_fac[[v]] <- df_els_stu[[v]]  
+  }
+```
+
+# ELS:2002 data
+
+## Intro to ELS:2002 data
+
+<br>
+
+The Educational Longitudinal Study (ELS) of 2002, referred to as ELS:2002
+
+- Nationally representative, longitudinal survey of US 10th graders in 2002, followed them from 2002 to 2013
+- Created by the National Center for Education Statistics, a branch of the U.S. Department of Education
+- [LINK](https://nces.ed.gov/surveys/els2002/) to ELS:2002 website
+- [LINK](https://nces.ed.gov/OnlineCodebook) to the NCES "Online Codebook"  website, which contains "public-use" versions of ELS datasets and detailed information about all variables
+  - variables that could potentially be used to identify ELS survey respondents are "suppressed" from public-use datasets
+  - these variables are present in "restricted" versions of ELS datasets
+
+  
+<br>  
+
+ELS datasets we created
+
+- student-level data frame `df_els_stu_all` has all variables (about 4,000) and all observations (about 16,200 observations); one observation for each student
+- student-level data frame `df_els_stu` has a subset of variables and a subset of observations
+  - sample is respondents who filled completed all waves of the survey; who attended postsecondary education at some point by 2012; and some other minor sample criteria around observations not being missing for certain variables
+- for both `df_els_stu_all` and `df_els_stu`, most categorical variables are `labelled` class variables
+- student-level data frame `df_els_stu_fac` is exact same as `df_els_stu` except categorical variables are `factor` class; categorical variables must be factor class when running regression models
+- In the coming weeks, we want your help in identifying variables of interest and populations/samples of interest!
+<br>  
+
+Investigate `df_els_stu` (output not shown)
+```{r, include = FALSE}
+# variable names
+df_els_stu %>% glimpse()
+
+# variable labels
+df_els_stu %>% var_label()
+```
+
+<br>  
+
+Investigate `df_els_stu_fac`
+```{r}
+# variable names
+df_els_stu_fac %>% glimpse()
+
+# variable labels
+df_els_stu_fac %>% var_label()
+```
+
+
+<br>  
+
+
+
+## Example ELS:2002 research questions
+
+For the multivariate regression lecture, we will focus on using multivariate regression to answer *causal* research questions that follow the form "what is the effect of $X$ on $Y$?"
+
+<br>
+
+Example research questions using ELS:2002 data
+
+
+1. [observational design, categorical $X$] What is the effect of having an internship or co-op job ($X$) (in 2005-06) on 2011 earnings ($Y$)? [for students who were enrolled in postsecondary education in 2005-06]
+    - $Y$ is `f3ern2011`
+    - $X$ is `f2intern0506` (this would be sophomore year for students who graduated HS in spring 2004 and immediately entered postsecondary education)
+      - `f2intern0506==0`: no co-op/internship
+    - sample: `f2enroll0506=='yes'`
+    
+```{r}
+df_els_stu_fac %>% filter(f2enroll0506=='yes') %>% 
+  group_by(f2intern0506) %>% summarize(
+  mean_earn = mean(f3ern2011, na.rm = TRUE),
+  n_nonmissing = sum(!is.na(f3ern2011))
+)
+```
+    
+
+<br><br>
+
+2. [observational design, categorical $X$] What is the effect of field of study ($X$) on earnings ($Y$)? [for respondents not currently enrolled in postsecondary education]
+    - answer the RQ separately for: certificate degrees; associate's degrees; for bachelor's degrees?
+    - $Y$ is `f3ern2011`
+    - for certificate degrees: $X$ is `f3tzcrt1cip2`
+    - for associate's degrees: $X$ is `f3tzasc1cip2`
+    - for bachelor's degrees: $X$ is `f3tzbch1cip2 `
+
+```{r}
+# certificate degrees
+df_els_stu_fac %>% filter(!(f3tzcrt1cip2 %in% c('Missing','Item legitimate skip/NA')), f3a01d=='No') %>% 
+  group_by(f3tzcrt1cip2) %>% summarize(
+  mean_earn = mean(f3ern2011, na.rm = TRUE),
+  n_nonmissing = sum(!is.na(f3ern2011))
+)
+
+# associates degreees
+df_els_stu_fac %>% filter(!(f3tzasc1cip2 %in% c('Missing','Item legitimate skip/NA')), f3a01d=='No') %>% 
+  group_by(f3tzasc1cip2) %>% summarize(
+  mean_earn = mean(f3ern2011, na.rm = TRUE),
+  n_nonmissing = sum(!is.na(f3ern2011))
+)
+
+# bachelor's degreees
+df_els_stu_fac %>% filter(!(f3tzbch1cip2 %in% c('Missing','Item legitimate skip/NA')), f3a01d=='No') %>% 
+  group_by(f3tzbch1cip2) %>% summarize(
+  mean_earn = mean(f3ern2011, na.rm = TRUE),
+  n_nonmissing = sum(!is.na(f3ern2011))
+) %>% print(n=30)
+```
+<br><br>
+
+3. [observational design, continuous $X$] What is the effect of amount borrowed in student loans ($X$) on earnings ($Y$) for respondents not currently enrolled in postsecondary education
+    - $X$ var is `f3totloan`; $Y$ var is `f3ern2011`
+    - sample: `f3a01d=='No'`
+
+
+```{r}
+df_els_stu_fac %>% filter(f3a01d=="No") %>%  ggplot(aes(x=f3totloan, y=f3ern2011)) + geom_point() + stat_smooth(method = 'lm')
+
+summary(lm(formula = f3ern2011 ~ f3totloan, data = df_els_stu %>% filter(f3a01d==0)))
+```
+
+<br>
+<br>
+Why are we using earnings as the dependent variable?
+
+- Ordinary Least Squares (OLS) multivariate regression assumes continuous dependent variable; regression models with categorical dependent variables are a bit more difficult to interpret
+- But in later weeks, we may introduce the "linear probability model," which will enable us to model dichotomous (two-category) dependent variables (e.g., 0/1 did student graduate)
+
+# Think of variables and research questions of interest
+
+Your task is to:
+
+- think of potential dependent variables of interest and potential independent variables of interest
+  - some of these variables may already be in the data frame `els_stu_fac`; some may be in the larger data frame `els_stu_all`, and I can add them to `els_stu_fac` in subsequent weeks
+  - dependent variables can be continous or dichotomous (two categories)
+  - independent variables should be variables that could be (in theory) randomly assigned in a random assignment experiment
+- think of potential causal research questions of interest that follow the form "what is the effect of X on Y"
+  - you may think about what sample/population of students this research questions pertains to
+- write your notes/ideas about dependent variables of interest, independent variables of interest, research questions of interest, populations of interest in the google doc for your group;
+  - doesn't have to be polished! But I'll use your ideas when thinking about which variables to add to `els_stu_fac`, and when thinking about questions for the take-home final exam (I want research questions that speak to your interests)
+  
+<br>
+
+Can use the `lookfor()` function from the `labelled` package to query which variables and variable labels contain certain words
+
+- syntax (with defaults):
+  - `look_for(data, ..., labels = TRUE, ignore.case = TRUE, details = TRUE)`
+  - where argument `...` contains "strings" (e.g., words) you are looking for, enclosed in quotation marks
+- example syntax, looking for variable names and variable labels that contain the word "internship"
+  - `lookfor(data=df_els_stu_all, 'internship',labels = TRUE, ignore.case = TRUE, details = TRUE)`
+
+<br>
+
+useful to use `lookfor()` to query the dataset `df_els_stu_all` because this dataset has so many variables (more than 4,000)
+```{r}
+
+# query data frame df_els_stu_all
+  lookfor(data=df_els_stu_all, 'internship',labels = TRUE, ignore.case = TRUE, details = TRUE)
+
+
+# query data frame df_els_stu
+  lookfor(data=df_els_stu, 'debt',labels = TRUE, ignore.case = TRUE, details = TRUE)
+  lookfor(data=df_els_stu, 'loan',labels = TRUE, ignore.case = TRUE, details = TRUE)
+```
+
+<br>
+
+Investigate `df_els_stu_fac` (output not shown)
+```{r, include = FALSE}
+# variable names
+df_els_stu_fac %>% glimpse()
+
+# variable labels
+df_els_stu_fac %>% var_label()
+```

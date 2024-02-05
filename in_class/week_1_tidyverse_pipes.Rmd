@@ -1,0 +1,102 @@
+---
+title: "In-class exercise: Objects, Tidyverse, & Pipes"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Instructions  
+- Take a few minutes to review section 3, Tidyverse & Pipes, from the R walkthrough document [here](https://anyone-can-cook.github.io/educ152/assets/resources/educ152_walkthrough.html#3_Tidyverse_and_Pipes)  
+
+### Task  
+
+__Install/load packages and read in data__  
+
+- Run the code chunks below to install and load `Tidyverse`.  
+You will be reading in a subset of the college scorecard data from lecture that includes the following 8 universities:  
+    - UC-Berkeley = 001312
+    - UCLA = 001315
+    - USC = 001328
+    - Stanford = 001305
+    - Columbia = 002707
+    - Columbia, Teacher's College = 003979
+    - NYU = 002785
+    - Harvard = 002155.
+    
+Install Tidyverse (if you haven't already) and load the library.
+```{r message=FALSE}
+#install.packages("tidyverse") #uncomment this line out
+library(tidyverse)
+```
+
+Read in a subset of the college scorecard data
+```{r}
+#Read in data set (data frame)
+load(url("https://github.com/anyone-can-cook/educ152/raw/main/data/college_scorecard/output_data/scorecard_edu_small.RData"))
+
+#print first 6 observations or rows
+scorecard_edu_sm
+```
+
+__Pipes__  
+
+- Now that we have `Tidyverse` installed and loaded, we can begin to use `pipes`. 
+- Run the code chunk below using the `names()` to print the variable names in the `scorecard_edu_sm` dataframe.  
+```{r}
+names(scorecard_edu_sm)
+```
+
+- Say we wanted to view only the institution names. Run the code chunk below using the `select()` function to select the column or variable `instnm`.
+```{r}
+scorecard_edu_sm %>% select(instnm)
+```
+
+- What if I only wanted to see universities in California? Run the code chunk below using the `filter()` function to filter for rows or observations of universities in California.
+```{r}
+scorecard_edu_sm %>% select(instnm, stabbr) %>% filter(stabbr == "CA")
+```
+
+- Say I wanted to create an object of universities in CA. I would have to assign it using the assignment operator `<-` or `=`. The `cali_schools` is an object I created below.  
+```{r}
+cali_schools <- scorecard_edu_sm %>% filter(stabbr == "CA") %>% select(instnm, stabbr) %>% unique() #using the unique() function to only grab unique rows/observations
+```
+
+- It is considered a `list` object.
+```{r}
+typeof(cali_schools)
+class(cali_schools)
+```
+
+### Now it is your turn:
+
+__Question 1:__ Using the dataframe `scorecard_edu_sm`, select the variables/columns `instnm`, `stabbr`, and `control`. Don't forget to use a pipe `%>%`
+
+<details><summary><b>Solutions</b></summary>
+```{r}
+scorecard_edu_sm %>% select(instnm, stabbr, control)
+```
+</details> 
+
+<br>
+
+__Question 2:__ Using the same code from above, filter for universities in the state `stabbr` of "NY". Don't forget to use a pipes `%>%` in your code.
+
+<details><summary><b>Solutions</b></summary>
+```{r}
+scorecard_edu_sm %>% select(instnm, stabbr, control) %>% filter(stabbr == "NY")
+```
+</details> 
+
+<br>
+
+__Question 3:__ Now say we want to save our code from above as an object. Create an object called `ny_schools`. Don't forget to use a pipes `%>%` in your code. _Hint: you maybe want to use unique() at the end of your code_
+
+<details><summary><b>Solutions</b></summary>
+```{r}
+ny_schools <- scorecard_edu_sm %>% select(instnm, stabbr, control) %>% filter(stabbr == "NY") %>% unique()
+```
+</details> 
+
+<br>

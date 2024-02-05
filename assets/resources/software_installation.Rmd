@@ -1,0 +1,76 @@
+---
+title: "EDUC 152 Introduction to Quantitative Research in Education"
+subtitle: "Software to install before first class meeting"
+output: pdf_document
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+***
+#### Please skim through all of the instructions before getting start.  
+
+
+## 1. Create a Slack account (if you don't already have one) 
+  * We will be conducting all class-related discussion on slack.  
+  * The TA will send you an invite to the class slack channel. 
+  
+## 2. Install R 
+  * Go to https://cran.r-project.org/  
+  * **For Windows only** Select "Download R for Windows"  
+  
+      * Click "install R for the first time"
+      * Click "Download R 4.0.4 for Windows"  
+  * **For MAC only** Select "Download R for (Mac) OS  X"   
+  
+      * Click "R-4.0.4.pkg"   
+        
+## 3. Install RStudio  
+  * Go to https://www.rstudio.com/products/rstudio/download/  
+  * Scroll to the bottom of the page  
+  * Select "RStudio-1.4.1106.exe - Windows 10/8" for **Windows** users  
+  * Select "RStudio-1.4.1106.dmg - macOS 10.13+" for **Mac** users  
+    
+## 4. Create R Markdown file that “knits” to an HTML and PDF document in RStudio  
+  * What do we mean by this?  
+  
+    * We will use R Markdown for lectures (HTML) and turning in problem sets (pdf).  
+    * R Markdown allows us to create documents in a variety of formats (HTML, pdf, word, etc.). For example, this document was created using R markdown (pdf).  
+    * [Here](https://rmarkdown.rstudio.com/formats.html) is a link to more information on R Markdown outputs.  
+  * Steps to follow to create R Markdown file that knits **HTML** document  
+    * Load RStudio  
+    * At the top left corner select “File” ->“New file” -> “R Markdown”  
+    * Select “HTML”, title your markdown file (optional), and click “OK”  
+    * Now select the “Knit” tab (icon with blue yarn ball) or scroll down and “Knit to HTML”  
+    * Give your file a name and save (can delete later) in place that is easy to locate (Desktop, Downloads, etc.)  
+    * You should have a saved HTML file (extension .HTML) and an R markdown file (extension .Rmd)  
+    
+
+  * Steps to follow to create R Markdown file that knits **PDF** document 
+  
+    * In your RStudio, at the top left corner select “File” -> “New file” -> “R Markdown”  
+    * Select “PDF”, title your markdown file (optional), and click “OK”  
+    * Now select the “Knit” tab (icon with blue yarn ball) or scroll down and “Knit to PDF”  
+    * Give your file a name and save (can delete later) in place that is easy to locate  
+    * You should have a saved pdf file (extension .pdf) and an R markdown file (extension .Rmd)  
+    
+    *Note: You will need to have tinytex installed in RStudio **OR** LaTeX installed in your computer to be able to knit to pdf. If you receive an error shoot me an email and we can troubleshoot together*
+    
+    
+## 5. Complete the first chapter of Introduction to R on Datacamp (OPTIONAL) [here](https://learn.datacamp.com/courses/free-introduction-to-r)  
+
+  * _Note: All first chapters of DataCamp's standard courses are free._   
+  
+      * Follow the link and create an account  
+      * This tutorial may take 2-4 hours  
+      * We encourage you to complete this tutorial if you are new to R and/or would like extra practice  
+      * We recommend you run your code on your own RStudio to get some practice.  
+      
+
+    
+\  
+\  
+  
+
+*Disclaimer: I am a Mac user and will do the best I can assisting with any Windows issues*

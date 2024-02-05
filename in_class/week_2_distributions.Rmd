@@ -1,0 +1,363 @@
+---
+title: "In-class exercise: Distributions and Sampling distributions"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Instructions  
+
+- We are going to work through some concepts discussed in the previous week's lecture (e.g. sampling distribution, central limit theorem, working with user-written functions). 
+
+### Task 
+
+Please run the code in the following chunk, which does the following:
+
+- Loads libraries
+- Loads and creates IPEDS data frame  (population)
+- Creates data frame of generated variables (population)
+- Creates sample versions of the IPEDS and gnerated data frames
+
+_Note: code chunk omitted from html document using include = FALSE_
+```{r, include= FALSE}
+#-----------------------------------------------------------------------------
+# Load libraries
+#-----------------------------------------------------------------------------
+
+  #install.packages('tidyverse') # if you haven't installed already
+  #install.packages('labelled') # if you haven't installed already
+  #install.packages('patchwork') # if you haven't installed already
+
+library(tidyverse) # load tidyverse package
+library(labelled) # load labelled package package
+library(patchwork)
+
+#-----------------------------------------------------------------------------
+# Load ipeds dataset from course website url
+#-----------------------------------------------------------------------------
+
+load(file = url('https://github.com/anyone-can-cook/educ152/raw/main/data/ipeds/output_data/panel_data.RData'))
+
+# Create ipeds data frame with fewer variables/observations
+df_ipeds_pop <- panel_data %>%
+  # keep data from fall 2019
+  filter(year == 2019) %>%
+  # which universities to keep:
+    # 2015 carnegie classification: keep research universities (15,16,17) and master's universities (18,19,20)
+  filter(c15basic %in% c(15,16,17,18,19,20)) %>%
+  # which variables to keep
+  select(instnm,unitid,opeid6,opeid,control,c15basic,stabbr,city,zip,locale,obereg, # basic institutional characteristics
+         tuition6,fee6,tuition7,fee7, # avg tuition and fees for full-time grad, in-state and out-of-state
+         isprof3,ispfee3,osprof3,ospfee3, # avg tuition and fees for MD, in-state and out-of-state
+         isprof9,ispfee9,osprof9,ospfee9, # avg tuition and fees for Law, in-state and out-of-state
+         chg4ay3,chg7ay3,chg8ay3) %>% # [undergraduate] books+supplies; off-campus (not with family) room and board; off-campus (not with family) other expenses
+  # rename variables; syntax <new_name> = <old_name>
+  rename(region = obereg, # revion
+         tuit_grad_res = tuition6, fee_grad_res = fee6, tuit_grad_nres = tuition7, fee_grad_nres = fee7, # grad
+         tuit_md_res = isprof3, fee_md_res = ispfee3, tuit_md_nres = osprof3, fee_md_nres = ospfee3, # md
+         tuit_law_res = isprof9, fee_law_res = ispfee9, tuit_law_nres = osprof9, fee_law_nres = ospfee9, # law
+         books_supplies = chg4ay3, roomboard_off = chg7ay3, oth_expense_off = chg8ay3) %>% # [undergraduate] expenses
+  # create measures of tuition+fees
+  mutate(
+    tuitfee_grad_res = tuit_grad_res + fee_grad_res, # graduate, state resident
+    tuitfee_grad_nres = tuit_grad_nres + fee_grad_nres, # graduate, non-resident
+    tuitfee_md_res = tuit_md_res + fee_md_res, # MD, state resident
+    tuitfee_md_nres = tuit_md_nres + fee_md_nres, # MD, non-resident
+    tuitfee_law_res = tuit_law_res + fee_law_res, # Law, state resident
+    tuitfee_law_nres = tuit_law_nres + fee_law_nres) %>% # Law, non-resident  
+  # create measures of cost-of-attendance (COA) as the sum of tuition, fees, book, living expenses
+  mutate(
+    coa_grad_res = tuit_grad_res + fee_grad_res + books_supplies + roomboard_off + oth_expense_off, # graduate, state resident
+    coa_grad_nres = tuit_grad_nres + fee_grad_nres + books_supplies + roomboard_off + oth_expense_off, # graduate, non-resident
+    coa_md_res = tuit_md_res + fee_md_res + books_supplies + roomboard_off + oth_expense_off, # MD, state resident
+    coa_md_nres = tuit_md_nres + fee_md_nres + books_supplies + roomboard_off + oth_expense_off, # MD, non-resident
+    coa_law_res = tuit_law_res + fee_law_res + books_supplies + roomboard_off + oth_expense_off, # Law, state resident
+    coa_law_nres = tuit_law_nres + fee_law_nres + books_supplies + roomboard_off + oth_expense_off) %>% # Law, non-resident    
+  # keep only observations that have non-missing values for cost of off-campus room and board and cost of off-campus other expenses and non-missing values for tuit+fees
+  filter(!is.na(roomboard_off) & !is.na(oth_expense_off) & !is.na(tuitfee_grad_nres))
+
+# Add variable labels to the tuit+fees variables and coa variables
+  # tuition + fees variables
+    var_label(df_ipeds_pop[['tuitfee_grad_res']]) <- 'graduate, full-time, resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_grad_nres']]) <- 'graduate, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_res']]) <- 'MD, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_nres']]) <- 'MD, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_res']]) <- 'Law, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_nres']]) <- 'Law, full-time, non-resident; avg tuition + required fees'
+    
+  # COA variables
+    var_label(df_ipeds_pop[['coa_grad_res']]) <- 'graduate, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_grad_nres']]) <- 'graduate, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_res']]) <- 'MD, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_nres']]) <- 'MD, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_res']]) <- 'Law, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_nres']]) <- 'Law, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+
+df_ipeds_pop %>% glimpse()
+
+#-----------------------------------------------------------------------------
+# Create data frame of generated variables, with each variable meant to represent the entire population
+#-----------------------------------------------------------------------------
+
+num_obs <- 10000
+
+# Generate normal distribution w/ custom mean and sd
+set.seed(124)
+norm_dist <- rnorm(n = num_obs, mean = 50, sd = 5)
+
+# Generate right-skewed distribution
+set.seed(124)
+rskew_dist <- rbeta(n = num_obs, shape1 = 2, shape2 = 5)
+
+# Generate left-skewed distribution
+set.seed(124)
+lskew_dist <- rbeta(n = num_obs, shape1 = 5, shape2 = 2)
+
+# Generate standard normal distribution (default is mean = 0 and sd = 1)
+set.seed(124)
+stdnorm_dist <- rnorm(n = num_obs, mean = 0, sd = 1)  # equivalent to rnorm(10)
+
+# Create dataframe
+df_generated_pop <- data.frame(norm_dist, rskew_dist, lskew_dist, stdnorm_dist)
+
+# drop individual objects associated with each variable
+rm(norm_dist,rskew_dist,lskew_dist,stdnorm_dist)
+rm(num_obs)
+
+#-----------------------------------------------------------------------------
+# Create sample versions of generated population data frame and IPEDS #-----------------------------------------------------------------------------
+
+# create sample version of our generated data
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_generated_sample <- df_generated_pop %>% sample_n(size = 200)
+  df_generated_sample %>% glimpse()
+
+
+# create sample version of our ipeds data
+
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_ipeds_sample <- df_ipeds_pop %>% sample_n(size = 200) 
+
+
+#-----------------------------------------------------------------------------
+# Create function to generate plots of variable distributions
+#-----------------------------------------------------------------------------
+
+plot_distribution <- function(data_vec, plot_title = '') {
+  p <- ggplot(as.data.frame(data_vec), aes(x=data_vec)) + xlab('') +
+    ggtitle(plot_title) +
+    geom_histogram(aes(y=..density..), alpha=0.4, position='identity') +
+    geom_density() +
+    geom_vline(aes(xintercept=mean(data_vec, na.rm = T), color='mean'),
+               linetype='dotted', size=0.8, alpha=0.8) +
+    geom_vline(aes(xintercept=median(data_vec, na.rm = T), color='median'),
+               linetype='dotted', size=0.8, alpha=0.8) +
+    scale_color_manual(name = 'Statistics',
+                       labels = c(paste('Mean:', round(mean(data_vec, na.rm = T), 2),
+                                        '\nStd Dev:', round(sd(data_vec, na.rm = T), 2)), 
+                                paste('Median:', round(median(data_vec, na.rm = T), 2))),
+                       values = c(median='blue', mean='red')) +
+    theme(plot.title = element_text(size=10, face='bold', hjust = 0.5),
+          legend.title = element_text(size=9, face='bold'),
+          legend.text = element_text(size=8))
+  
+  p
+}
+
+
+#-----------------------------------------------------------------------------
+# Write function to get the sampling distribution from a variable (defaults equal 500 samples of size 200)
+#-----------------------------------------------------------------------------
+
+get_sampling_distribution <- function(data_vec, num_samples = 500, sample_size = 200) {
+  sample_means <- vector(mode = 'numeric', num_samples)
+
+  for (i in 1:length(sample_means)) {
+    samp <- sample(data_vec, sample_size)
+    sample_means[[i]] <- mean(samp, na.rm = T)
+  }
+
+  sample_means
+}
+
+#-----------------------------------------------------------------------------
+# Write Function to generate sampling distribution (with t-test value) assuming null hypothesis is correct
+#-----------------------------------------------------------------------------
+
+
+plot_t_distribution <- function(data_vec, mu, alpha = 0.05, alternative = 'two.sided', plot_title = '') {
+  
+  data_vec <- na.omit(data_vec)
+  
+  # Calculate t-statistics
+  sample_size <- length(data_vec)
+  deg_freedom <- sample_size - 1
+  xbar <- mean(data_vec)
+  s <- sd(data_vec)
+  
+  std_err <- s / sqrt(sample_size)
+  t <- (xbar - mu) / std_err
+  
+  # Calculate critical value and p-value
+  if (alternative == 'less') {  # left-tailed
+    cv_lower <- qt(p = alpha, df = deg_freedom, lower.tail = T)
+    cv_legend <- round(cv_lower, 2)
+    cv_legend2 <- round(cv_lower * std_err + mu, 2)
+    pval <- pt(q = t, df = deg_freedom, lower.tail = T)
+  } else if (alternative == 'greater') {  # right-tailed
+    cv_upper <- qt(p = alpha, df = deg_freedom, lower.tail = F)
+    cv_legend <- round(cv_upper, 2)
+    cv_legend2 <- round(cv_upper * std_err + mu, 2)
+    pval <- pt(q = t, df = deg_freedom, lower.tail = F)
+  } else {  # two-tailed
+    cv_lower <- qt(p = alpha / 2, df = deg_freedom, lower.tail = T)
+    cv_upper <- qt(p = alpha / 2, df = deg_freedom, lower.tail = F)
+    cv_legend <- str_c('\u00B1', round(cv_upper, 2))
+    cv_legend2 <- str_c(round(cv_lower * std_err + mu, 2), ' & ', round(cv_upper * std_err + mu, 2))
+    pval <- 2 * pt(q = t, df = deg_freedom, lower.tail = t < 0)
+  }
+  
+  # Plot t-distribution
+  p <- ggplot(data.frame(x = -c(-4, 4)), aes(x)) +
+    ggtitle(plot_title) + xlab('') + ylab('') +
+    stat_function(fun = dt, args = list(df = deg_freedom))
+  
+  # Shade rejection region using critical value
+  if (alternative != 'greater') {
+    p <- p +
+      stat_function(fun = dt, args = list(df = deg_freedom),
+                    xlim = c(-4, cv_lower),
+                    geom = 'area', alpha = 0.3, fill = 'red') +
+      geom_vline(aes(xintercept = cv_lower, color = 'cval'),
+                 linetype = 'dotted', size = 0.8, alpha = 0.8)
+  }
+  if (alternative != 'less') {
+    p <- p +
+      stat_function(fun = dt, args = list(df = deg_freedom),
+                    xlim = c(cv_upper, 4),
+                    geom = 'area', alpha = 0.3, fill = 'red') +
+      geom_vline(aes(xintercept = cv_upper, color = 'cval'),
+                 linetype = 'dotted', size = 0.8, alpha = 0.8)
+  }
+  
+  # Label plot
+  p <- p +
+    geom_vline(aes(xintercept = t, color = 'tstat'),
+               linetype = 'dotted', size = 0.8, alpha = 0.8) +
+    scale_x_continuous(sec.axis = sec_axis(trans = ~ . * std_err + mu)) +
+    scale_color_manual(name = 'Legend',
+                       breaks = c('tstat', 'cval'),
+                       labels = c(str_c('t-statistics: ', round(t, 2), ' / ', round(xbar, 2),
+                                        ' (SE: ', round(std_err, 2), ')',
+                                        '\n(p-value: ', round(pval, 3), ')'),
+                                  str_c('Critical value: ', cv_legend, ' / ', cv_legend2,
+                                        '\n(alpha: ', round(alpha, 2), ')')),
+                       values = c(tstat='blue', cval='red')) +
+    theme(plot.title = element_text(size = 10, face = 'bold', hjust = 0.5),
+          legend.title = element_text(size = 9, face = 'bold'),
+          legend.text = element_text(size = 8))
+
+  p
+}
+```
+
+### Question 1
+
+If we wanted to plot the distribution of the variable `coa_grad_nres` from the data frame `df_ipeds_pop`, we could use the user-written function called `plot_distribution` like so:
+```{r warning=FALSE, message=FALSE}
+plot_distribution(data_vec = df_ipeds_pop$coa_grad_nres, plot_title = "Distribution of cost of attendance for out-of-state graduate students")
+```
+
+- Does the distribution above have a normal, left-skewed, or right-skwed shape? Why?
+<details><summary><b>ANSWER</b></summary>
+<br>
+The variable `coa_grad_nres` appears to have a right-skewed distribution. It is right-skewed because the right tail is longer due to the presence of positive outliers and as such these outliers increase the value of the mean and therefore our mean is higher than our median (e.g., mean > median).
+<br>
+</details> 
+
+
+- What is the standard deviation and interpret this value in words?
+<details><summary><b>ANSWER</b></summary>
+<br>
+The standard deviation is 10748.16 and it reads as follows: on average, observations are 10748 away from the mean of 34820.
+</details> 
+
+### Question 2
+
+Run the following code, which does the following:
+
+- Takes 1000 random samples of sample size n=20 from the data frame `df_ipeds_pop`.
+- For each random sample, calculates the sample mean of variable `coa_grad_nres`.
+- Plots the sampling distribution of the sample mean of variable  `coa_grad_nres`.
+
+```{r warning=FALSE, message=FALSE}
+set.seed(345)
+get_sampling_distribution(data_vec = df_ipeds_pop$coa_grad_nres, num_samples = 1000, sample_size = 20) %>%
+  plot_distribution(plot_title = "Sampling Distribution of the Sample mean")
+```
+
+- What does each observation in the above plot represent?
+<details><summary><b>ANSWER</b></summary>
+<br>
+A sample mean from one random sample
+<br>
+</details> 
+  
+- Would you describe the shape of the above distribtuion as (approximately) normal, left-skwed, or right-skewed?
+<details><summary><b>ANSWER</b></summary>
+normal
+<br>
+</details> 
+  
+__Your turn__  
+
+Run the following in the code chunk below:  
+
+- Take 1000 random samples of sample size n=200 from the data frame `df_ipeds_pop`.
+- For each random sample, calculates the sample mean of variable `coa_grad_nres`.
+- Plots the sampling distribution of the sample mean of variable  `coa_grad_nres`.
+
+<details><summary><b>SOLUTION</b></summary>
+<br>
+```{r warning=FALSE, message=FALSE}
+set.seed(345)
+get_sampling_distribution(data_vec = df_ipeds_pop$coa_grad_nres, num_samples = 1000, sample_size = 200) %>%
+  plot_distribution(plot_title = "Sampling Distribution of the Sample mean")
+```
+<br>
+</details>
+<br>
+  
+- Why is the standard error from this sampling distribution (each sample has sample size n=200) different than the standard error from the sampling distribution from the previous example (each sample has sample size n=20)?
+<details><summary><b>ANSWER</b></summary>
+<br>
+The standard error from the sampling distribution with a sample size of 20 is larger because the sample size for each random sample is smaller than the sample size for each random sample of size 200. The larger our sample size, the smaller our standard error is. Which means the smaller our standard error, the more precise our estimates.
+<br>
+</details>
+
+### Question 3  
+Run the following code, which does the following:
+
+- Plots the population distribution of the variable `coa_grad_nres`
+- Plots the distribution of the variable  `coa_grad_nres` from one sample
+- Plots the sampling distribution of the sample mean for the variable `coa_grad_nres`
+```{r warning=FALSE, message=FALSE}
+set.seed(345)
+plot_distribution(df_ipeds_pop$coa_grad_nres, plot_title = 'Population distribution') +
+  plot_distribution(df_ipeds_sample$coa_grad_nres, plot_title = 'Single sample distribution') +
+  plot_distribution(get_sampling_distribution(data_vec = df_ipeds_pop$coa_grad_nres, num_samples = 1000, sample_size = 200),plot_title = "sampling distribution of sample mean of coa_grad_nres") +
+  plot_layout(ncol = 1)
+```
+
+- State the central limit theorem in your own words and explain why it is important for hypothesis testing
+<details><summary><b>ANSWER</b></summary>
+<br>
+The central limit theorem is important when conducting hypothesis tests about a population parameter (e.g., about a population mean, about a population regression coefficient), based on the sampling distribution of the relevant sample statistic. If the sampling distribution has a normal distribution, then we know the percent of the observations that we are a certain number of standard deviations from the mean.
+<br>
+</details>
+
+<br>
