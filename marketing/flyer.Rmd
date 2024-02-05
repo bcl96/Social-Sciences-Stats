@@ -1,0 +1,35 @@
+---
+title: "Flyer, EDUC 152"
+author: 
+date: 
+urlcolor: blue
+output:
+  # word_document:
+  #   toc: no
+  #   toc_depth: '3'
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true # toc_float option to float the table of contents to the left of the main document content. floating table of contents will always be visible even when the document is scrolled
+      #collapsed: false # collapsed (defaults to TRUE) controls whether the TOC appears with only the top-level (e.g., H2) headers. If collapsed initially, the TOC is automatically expanded inline when necessary
+      #smooth_scroll: true # smooth_scroll (defaults to TRUE) controls whether page scrolls are animated when TOC items are navigated to via mouse clicks
+    number_sections: true
+    fig_caption: true # ? this option doesn't seem to be working for figure inserted below outside of r code chunk    
+    highlight: tango # Supported styles include "default", "tango", "pygments", "kate", "monochrome", "espresso", "zenburn", and "haddock" (specify null to prevent syntax    
+    theme: default # theme specifies the Bootstrap theme to use for the page. Valid themes include default, cerulean, journal, flatly, readable, spacelab, united, cosmo, lumen, paper, sandstone, simplex, and yeti.
+    df_print: tibble #options: default, tibble, paged
+    keep_md: true # may be helpful for storing on github
+    
+---
+
+# Flyer language
+
+The course introduces regression as a tool to answer questions about education. Regression is commonly used to answer questions about association claims--relationship between variables--and causal claims--causal effect of one variable on another. Using regression appropriately requires thoughtfulness about what kinds of questions regression can answer, about assumptions regression relies on, about limitations of our data, and about how particular variables (e.g., "race" as a variable) are incorporated into analyses in order to avoid analyses that reify rather than interrogate problematic ideas. Therefore, the course emphasizes: learning fundamental concepts about regression; how to read and critically assess research that uses regression; and how to conduct regression analyses using the R programming language. Our practical applications of regression to answer education research questions will focus on analyzing practices that contribute to systematic inequality in educational opportunity. For example, we will examine data about the marketing/recruiting behavior of public universities in order to investigate potential racial discrimination in which prospective students universities recruit.
+
+
+
+Students are trained how to read and critically assess research and applications using R programming language. 
+
+
+
+EDUC 152 introduces students to regression as a tool to answer questions about education. Regression is commonly used to answer questions about "association claims" -- the relationship between variables -- and "causal claims" -- the causal effect of one variable on another. However, using regression appropriately requires thoughtfulness about what kinds of questions regression can answer, about the assumptions regression relies on, about the limitations of our data, and about how particular variables (e.g., "race" and "gender") are incorporated into analyses. Otherwise, regression results may be biased and may reify rather than interrogate problematic ideas. Therefore, the course emphasizes learning fundamental concepts of regression analysis and how these concepts can be thoughtfully applied to address different kinds of questions about education. The course also trains students how to read and critically assess research that uses regression. ECUC 152 integrates theory and application using the **_R_** programming language. Students will be assessed through four substantive take-home assignments, including a final, capstone assignment.
