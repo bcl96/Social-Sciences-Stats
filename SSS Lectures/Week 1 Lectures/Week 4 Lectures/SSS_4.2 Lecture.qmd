@@ -1,0 +1,41 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 4.2 Fundamentals of Inferential Statistics"
+format: pdf
+editor: source
+---
+Week 4: Learning goal - Apply understanding of central limit theorem and sampling distributions towards how to evaluate inferential statistics in R. 
+
+ 
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+
+Load packages:
+```{r, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+best_netflix <- read_csv("https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/netflix_data/Best%20Shows%20Netflix.csv")
+```
+
+Resources used to create this lecture:
+
+# Fundamentals of inferential statistics
+Population parameters
+
+Sample estimates 
+
+Using sample estimates to make inferences about population parameters
+
+	-Infer package (basic hypothesis testing)
+		-specify() allows you to specify the variable, or relationship between variables, that you’re interested in.
+ 		-hypothesize() allows you to declare the null hypothesis.
+ 		-generate() allows you to generate data reflecting the null hypothesis.
+-calculate() allows you to calculate a distribution of statistics from the generated data to form the null distribution.
+
+
+
+
