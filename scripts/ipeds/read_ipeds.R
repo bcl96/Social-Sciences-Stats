@@ -96,7 +96,7 @@ download_file <- function(file_type, file_prefix, file_year, file_suffix) {
 
 file_types <- c('csv','dict','stata')
 
-years <- c('2015','2016','2017','2018','2019','2020','2021','2022')
+years <- c('2016','2017','2018','2019','2020','2021','2022')
 
 # loop for data year
 for (y in 1:length(years)) { 
@@ -248,7 +248,7 @@ rm(panel_data)
 load(file = file.path(output_dir, 'panel_data.RData'))
 rm(panel_data)
 
-load(file = url('https://github.com/anyone-can-cook/educ152/raw/main/data/ipeds/output_data/panel_data.RData'))
+load(url("https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/ipeds/output_data/panel_data.RData"))
 
 panel_data %>% glimpse()
 
