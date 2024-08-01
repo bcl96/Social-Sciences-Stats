@@ -1,0 +1,495 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 3.2 Distributions"
+format: pdf
+editor: source
+---
+Week 3: Learning goal - Articulate the descriptors of normal distribution and skewness.
+
+ 
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+
+Load packages:
+```{r, message=FALSE}
+library(tidyverse)
+library(labelled)
+library(patchwork)
+library(ggplot2)
+
+# Load ipeds dataset from course website
+load(url('https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/ipeds/output_data/panel_data.RData'))
+```
+
+```{r, echo=FALSE}
+# Create ipeds data frame with fewer variables/observations
+df_ipeds_pop <- panel_data %>%
+  # keep data from fall 2022
+  filter(year == 2022) %>%
+  # which universities to keep:
+    # 2015 carnegie classification: keep research universities (15,16,17) and master's universities (18,19,20)
+  filter(c15basic %in% c(15,16,17,18,19,20)) %>%
+  # which variables to keep
+  select(instnm,unitid,opeid6,opeid,control,c15basic,stabbr,city,zip,locale,obereg, # basic institutional characteristics
+         tuition6,fee6,tuition7,fee7, # avg tuition and fees for full-time grad, in-state and out-of-state
+         isprof3,ispfee3,osprof3,ospfee3, # avg tuition and fees for MD, in-state and out-of-state
+         isprof9,ispfee9,osprof9,ospfee9, # avg tuition and fees for Law, in-state and out-of-state
+         chg4ay3,chg7ay3,chg8ay3) %>% # [undergraduate] books+supplies; off-campus (not with family) room and board; off-campus (not with family) other expenses
+  # rename variables; syntax <new_name> = <old_name>
+  rename(region = obereg, # revion
+         tuit_grad_res = tuition6, fee_grad_res = fee6, tuit_grad_nres = tuition7, fee_grad_nres = fee7, # grad
+         tuit_md_res = isprof3, fee_md_res = ispfee3, tuit_md_nres = osprof3, fee_md_nres = ospfee3, # md
+         tuit_law_res = isprof9, fee_law_res = ispfee9, tuit_law_nres = osprof9, fee_law_nres = ospfee9, # law
+         books_supplies = chg4ay3, roomboard_off = chg7ay3, oth_expense_off = chg8ay3) %>% # [undergraduate] expenses
+  # create measures of tuition+fees
+  mutate(
+    tuitfee_grad_res = tuit_grad_res + fee_grad_res, # graduate, state resident
+    tuitfee_grad_nres = tuit_grad_nres + fee_grad_nres, # graduate, non-resident
+    tuitfee_md_res = tuit_md_res + fee_md_res, # MD, state resident
+    tuitfee_md_nres = tuit_md_nres + fee_md_nres, # MD, non-resident
+    tuitfee_law_res = tuit_law_res + fee_law_res, # Law, state resident
+    tuitfee_law_nres = tuit_law_nres + fee_law_nres) %>% # Law, non-resident  
+  # create measures of cost-of-attendance (COA) as the sum of tuition, fees, book, living expenses
+  mutate(
+    coa_grad_res = tuit_grad_res + fee_grad_res + books_supplies + roomboard_off + oth_expense_off, # graduate, state resident
+    coa_grad_nres = tuit_grad_nres + fee_grad_nres + books_supplies + roomboard_off + oth_expense_off, # graduate, non-resident
+    coa_md_res = tuit_md_res + fee_md_res + books_supplies + roomboard_off + oth_expense_off, # MD, state resident
+    coa_md_nres = tuit_md_nres + fee_md_nres + books_supplies + roomboard_off + oth_expense_off, # MD, non-resident
+    coa_law_res = tuit_law_res + fee_law_res + books_supplies + roomboard_off + oth_expense_off, # Law, state resident
+    coa_law_nres = tuit_law_nres + fee_law_nres + books_supplies + roomboard_off + oth_expense_off) %>% # Law, non-resident    
+  # keep only observations that have non-missing values for the variable coa_grad_res
+    # this does cause us to lose some interesting universities, but doing this will eliminate some needless complications with respect to learning core concepts about statistical inference
+  filter(!is.na(coa_grad_res))
+
+# Add variable labels to the tuit+fees variables and coa variables
+  # tuition + fees variables
+    var_label(df_ipeds_pop[['tuitfee_grad_res']]) <- 'graduate, full-time, resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_grad_nres']]) <- 'graduate, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_res']]) <- 'MD, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_nres']]) <- 'MD, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_res']]) <- 'Law, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_nres']]) <- 'Law, full-time, non-resident; avg tuition + required fees'
+    
+  # COA variables
+    var_label(df_ipeds_pop[['coa_grad_res']]) <- 'graduate, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_grad_nres']]) <- 'graduate, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_res']]) <- 'MD, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_nres']]) <- 'MD, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_res']]) <- 'Law, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_nres']]) <- 'Law, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+
+df_ipeds_pop %>% glimpse()
+
+
+##########
+########## Create data frame of generated variables, with each variable meant to represent the entire population
+##########
+
+
+num_obs <- 10000
+
+# Generate normal distribution w/ custom mean and sd
+set.seed(124)
+norm_dist <- rnorm(n = num_obs, mean = 50, sd = 5)
+
+# Generate right-skewed distribution
+set.seed(124)
+rskew_dist <- rbeta(n = num_obs, shape1 = 2, shape2 = 5)
+
+# Generate left-skewed distribution
+set.seed(124)
+lskew_dist <- rbeta(n = num_obs, shape1 = 5, shape2 = 2)
+
+# Generate standard normal distribution (default is mean = 0 and sd = 1)
+set.seed(124)
+stdnorm_dist <- rnorm(n = num_obs, mean = 0, sd = 1)  # equivalent to rnorm(10)
+
+# Create dataframe
+df_generated_pop <- data.frame(norm_dist, rskew_dist, lskew_dist, stdnorm_dist)
+
+# drop individual objects associated with each variable
+rm(norm_dist,rskew_dist,lskew_dist,stdnorm_dist)
+rm(num_obs)
+
+
+##########
+########## Create sample versions of generated population data frame and IPEDS population data frame
+##########
+
+# create sample version of our generated data
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_generated_sample <- df_generated_pop %>% sample_n(size = 200)
+  df_generated_sample %>% glimpse()
+
+
+# create sample version of our ipeds data
+
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_ipeds_sample <- df_ipeds_pop %>% sample_n(size = 200) 
+  
+  # compare mean of coa_grad_res between population and sample
+  mean(df_ipeds_pop$coa_grad_res, na.rm = TRUE)
+  mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE)
+
+
+##########
+# Create function to generate plots of variable distributions
+##########
+
+plot_distribution <- function(data_vec, plot_title = '') {
+  p <- ggplot(as.data.frame(data_vec), aes(x = data_vec)) +
+    ggtitle(plot_title) + xlab('') + ylab('') +
+    geom_histogram(aes(y = ..density..), alpha = 0.4, position = 'identity') +
+    geom_density() +
+    geom_vline(aes(xintercept = mean(data_vec, na.rm = T), color = 'mean'),
+               linetype = 'dotted', size = 0.8, alpha = 0.8) +
+    geom_vline(aes(xintercept = median(data_vec, na.rm = T), color = 'median'),
+               linetype = 'dotted', size = 0.8, alpha = 0.8) +
+    scale_color_manual(name = 'Statistics',
+                       labels = c(paste('Mean:', round(mean(data_vec, na.rm = T), 2),
+                                        '\nStd Dev:', round(sd(data_vec, na.rm = T), 2)),
+                                  paste('Median:', round(median(data_vec, na.rm = T), 2))),
+                       values = c(mean = 'blue', median = 'red')) +
+    theme(plot.title = element_text(size = 10, face = 'bold', hjust = 0.5),
+          legend.title = element_text(size = 9, face = 'bold'),
+          legend.text = element_text(size = 8))
+
+  p
+}
+
+
+##########
+# Write function to get the sampling distribution from a variable (defaults equal 500 samples of size 200)
+##########
+
+get_sampling_distribution <- function(data_vec, num_samples = 1000, sample_size = 200) {
+  sample_means <- vector(mode = 'numeric', num_samples)
+
+  for (i in 1:length(sample_means)) {
+    samp <- sample(data_vec, sample_size)
+    sample_means[[i]] <- mean(samp, na.rm = T)
+  }
+
+  sample_means
+}
+
+##########
+# Write Function to generate sampling distribution (with t-test value) assuming null hypothesis is correct
+##########
+
+
+# Function to generate t-distribution plot
+plot_t_distribution <- function(data_vec, mu, alpha = 0.05, alternative = 'two.sided', plot_title = '', shade_rejection = T, shade_pval = F, stacked = F) {
+  
+  data_vec <- na.omit(data_vec)
+  
+  # Calculate t-statistics
+  sample_size <- length(data_vec)
+  deg_freedom <- sample_size - 1
+  xbar <- mean(data_vec)
+  s <- sd(data_vec)
+  
+  std_err <- s / sqrt(sample_size)
+  t <- (xbar - mu) / std_err
+  
+  # Calculate critical value and p-value
+  if (alternative == 'less') {  # left-tailed
+    cv_lower <- qt(p = alpha, df = deg_freedom, lower.tail = T)
+    cv_legend <- round(cv_lower, 2)
+    cv_legend2 <- round(cv_lower * std_err + mu, 2)
+    pval <- round(pt(q = t, df = deg_freedom, lower.tail = T), 4)
+  } else if (alternative == 'greater') {  # right-tailed
+    cv_upper <- qt(p = alpha, df = deg_freedom, lower.tail = F)
+    cv_legend <- round(cv_upper, 2)
+    cv_legend2 <- round(cv_upper * std_err + mu, 2)
+    pval <- round(pt(q = t, df = deg_freedom, lower.tail = F), 4)
+  } else {  # two-tailed
+    cv_lower <- qt(p = alpha / 2, df = deg_freedom, lower.tail = T)
+    cv_upper <- qt(p = alpha / 2, df = deg_freedom, lower.tail = F)
+    cv_legend <- str_c('\u00B1', round(cv_upper, 2))
+    cv_legend2 <- str_c(round(cv_lower * std_err + mu, 2), ' & ', round(cv_upper * std_err + mu, 2))
+    pval_half <- round(pt(q = t, df = deg_freedom, lower.tail = t < 0), 4)
+    pval <- str_c(pval_half, ' + ', pval_half, ' = ', 2 * pval_half)
+  }
+  
+  # Plot t-distribution
+  p <- ggplot(data.frame(x = -c(-4, 4)), aes(x)) +
+    ggtitle(plot_title) + xlab('') + ylab('') +
+    stat_function(fun = dt, args = list(df = deg_freedom), xlim = c(-4, 4))
+  
+  # Shade rejection region using critical value
+  if (alternative != 'greater') {
+    p <- p + geom_vline(aes(xintercept = cv_lower, color = 'cval'),
+                        linetype = 'dotted', size = 0.8, alpha = 0.8)
+    
+    if (shade_rejection) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(-4, cv_lower),
+                             geom = 'area', alpha = 0.3, fill = 'red')
+    }
+    
+    if (shade_pval) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(-4, if_else(alternative == 'two.sided', -abs(t), t)),
+                             geom = 'area', alpha = 0.3, fill = 'blue')
+    }
+  }
+  if (alternative != 'less') {
+    p <- p + geom_vline(aes(xintercept = cv_upper, color = 'cval'),
+                        linetype = 'dotted', size = 0.8, alpha = 0.8)
+    
+    if (shade_rejection) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(cv_upper, 4),
+                             geom = 'area', alpha = 0.3, fill = 'red')
+    }
+    
+    if (shade_pval) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(if_else(alternative == 'two.sided', abs(t), t), 4),
+                             geom = 'area', alpha = 0.3, fill = 'blue')
+    }
+  }
+  
+  # Legend text
+  legend_text <- c('t-statistics / p-value', 'critical value / alpha')
+  
+  if (stacked) {
+    legend_text <- c(str_c('t-statistics: ', round(t, 2),
+                     '\n(p-value: ', str_extract(pval, '[\\d.-]+$'), ')'),
+                     str_c('Critical value: ', cv_legend,
+                     '\n(alpha: ', round(alpha, 2), ')'))
+  }
+  
+  stats_text <- c(str_c('t-statistics: ', round(t, 2)),
+                  str_c('SE: ', round(std_err, 2)),
+                  str_c('p-value: ', pval),
+                  str_c('Critical value: ', cv_legend),
+                  str_c('alpha: ', round(alpha, 2)))
+  
+  if (!stacked) {
+    p <- p +
+      annotate('text', size = 9*5/14, x = 4.84, y = 0.14, hjust = 0,
+               label = 'bold(Statistics)', parse = T) +
+      annotate('text', size = 8*5/14, x = 4.89, y = 0:4 * -0.015 + 0.12, hjust = 0,
+               label = stats_text)
+  }
+  
+  # Label plot
+  p <- p +
+    geom_vline(aes(xintercept = t, color = 'tstat'),
+               linetype = 'dotted', size = 0.8, alpha = 0.8) +
+    scale_x_continuous(sec.axis = sec_axis(trans = ~ . * std_err + mu)) +
+    scale_color_manual(name = if_else(stacked, 'Statistics', 'Legend'),
+                       breaks = c('tstat', 'cval'),
+                       labels = legend_text,
+                       values = c(tstat = 'blue', cval = 'red')) +
+    theme(plot.title = element_text(size = 10, face = 'bold', hjust = 0.5),
+          plot.margin = unit(c(5.5, if_else(stacked, 5.5, 30), 5.5, 5.5), 'pt'),
+          legend.title = element_text(size = 9, face = 'bold'),
+          legend.text = element_text(size = 8)) +
+    coord_cartesian(xlim = c(-4, 4),
+                    clip = 'off')
+
+  p
+}
+```
+
+# Distributions
+Distributions help us further understand our data as it provides a snapshot of the data. Distribution shows us how often each value appears in our dataset (frequency). Distributions tell us where the average value is (central tendency), the spread of the dataset (what the variability is), if the values are evenly spread out (normal) or if there is more values on one side (skewness). 
+
+```{r}
+# Distribution with a histogram for out-of-state average tuition for full-time graduates
+hist(df_ipeds_pop$tuit_grad_nres, breaks = 20, col = "darkgreen", main = "Average Tuition for Out-of-State Full-Time Graduates", xlab = "Average Tuition", ylab = "Frequency")
+
+# Distribution with a density plot
+plot(density(df_ipeds_pop$tuit_grad_nres), main = "Average Tuition for Out-of-State Full-Time Graduates", xlab = "Average Tuition", col = "red")
+
+# Distribution with a box plot
+boxplot(df_ipeds_pop$tuit_grad_nres, main = "Boxplot of Number of Votes", col = "lightgreen")
+
+```
+
+### Normal distribution
+Normal distributions are continuous probability distributions that are symmetric around the mean. Normal distributions have a bell-shaped curve, where the mean, median, and mode of the distribution are all equal and located at the center of the distribution. The standard deviation of our normal distribution tells us the spread of the distribution. The larger the standard deviation, the wider the normal distribution. The smaller the standard deviation, the narrower the normal distribution. For datasets that have a normal distribution, about 68% of the data will fall within one standard deviation of the mean, and 95% of the data will fall within two standard deviations, and 99.7% of the data falls within three standard deviations.
+
+When the mean, median, and mode are all the same, we are looking at a normal distribution. If the mean and median are equal, we know that the distribution is symmetric or has a "bell" shape. 
+
+```{r}
+# Example of normal distribution
+x <- seq(-5, 5, length.out = 100)  # Range of x values
+y <- dnorm(x, mean = 0, sd = 1)      # PDF values for the normal distribution
+
+# Plot the normal distribution
+plot(x, y, type = "l", lwd = 2, col = "blue", 
+     xlab = "x", ylab = "Density",
+     main = "Normal Distribution")
+
+```
+We generated a variable `df_generated_pop$norm_dist` that has a normal distribution and then plot the variable to visualize what a normal distribution looks
+
+- Descriptive statistics about the variable `df_generated_pop$norm_dist`
+  - It has a mean of `r round(mean(df_generated_pop$norm_dist, na.rm = TRUE), digits = 2)`
+  - It has a standard deviation of `r round(sd(df_generated_pop$norm_dist, na.rm = TRUE), digits = 2)`
+    - Standard deviation is a measure of how far away from the mean observations tend to be
+    - we can interpet this standard deviation as follows: on average, observations are `r round(sd(df_generated_pop$norm_dist, na.rm = TRUE), digits = 2)` away from the mean of `r round(mean(df_generated_pop$norm_dist, na.rm = TRUE), digits = 2)`
+
+We can also visualize the variable `df_generated_pop$norm_dist`, as shown below. Note the following:
+
+- Symmetric, "bell" shape
+- The mean is (nearly) identical to the median
+
+```{r}
+plot_distribution(df_generated_pop$norm_dist)
+```
+
+### Skewness (normal, left-skewed, right-skewed)
+Skewness measures the asymmetry of the distribution around its mean. In a normal distribution, the skewness is zero, which means that the distribution is symmetric. When the mean and median are not the same, we know that there is skewdness. There are some unusually extreme values on either side of the distribution. When the distribution leans towards the left side, it is left-skewed or negatively skewed. When the distribution leans towards the right side, it is right-skewed or positively skewed.
+
+Left-skewed distribution has its mean less than its median, and its median less than its mode. The tail of the distribution extends to the left side. Visually we will see that most of the data points are on the right side of the distribution. And there's value(s) that are unusually small in our dataset. Since this is negatively skewed, the skewness will be less than zero.
+
+- The left tail is longer than right tail, usually due to the presence of more negative outliers than would be expected in a bell shaped variable
+  - Negative outliers are defined as observations with very low values (e.g., extreme negative values) compared to most observations
+- These negative outliers decrease the value of the mean, such that the value of the mean is lower than the value of the median
+- In social science research left-skewed variables are less common than right-skewed variables
+
+Right-skewed distribution has its mean pulled towards the unusual values, so the mean is greater than its median, and its median greater than its mode. The tail of the distribution extends to the right side. Visually we will see that most of the data points are on the left side of the distribution. And there's value(s) that are unusually large in our dataset. Since this is positively skewed, the skewness will be greater than zero.
+
+- The right "tail" is longer than the left due to the presence of positive outliers, defined as observations with very high values compared to most observations
+- There are more positive outliers than you would expect in a bell (normal) shaped variable
+- These positive outliers increase the value of the mean, such that the value of the mean is higher than the value of the median
+  - Mean > Median
+- Real-world variables that tend to be right-skewed
+  - such as income; enrollment size, city population
+
+
+```{r}
+# Example of left-skewed distribution
+# We are creating left-skewed dataset
+data_left_skewed <- c(1, 20, 35, 55, 56, 56, 56, 57)
+
+# Density plot to show left-skewed distribution
+plot(density(data_left_skewed), main = "Density of Left-Skewed Distribution", 
+     xlab = "Value", col = "darkblue")
+
+# Another example with the left-skewed distribution that we generated
+plot_distribution(df_generated_pop$lskew_dist)
+
+# Example of right-skewed distribution
+# Density plot of out-of-state average tuition for full-time graduates
+plot(density(df_ipeds_pop$fee_grad_nres), main = "Out-of-State Required Fees for Full-Time Graduates", xlab = "Required Fees", col = "purple")
+
+# Another example with the right-skewed distribution that we generated
+plot_distribution(df_generated_pop$rskew_dist)
+```
+
+### Normal Distributions and the Empirical Rule
+
+The empirical rule states that when you have a normal distribution or approximately a normal, then all of the observed data points fall within 3 standard deviations of the mean.
+
+- About 68% of obs fall within one std. dev of mean  
+  - i.e., between $x - \hat{\sigma{x}}$ and $x + \hat{\sigma{x}}$
+  
+- About 95% of obs fall within two std. dev of mean  
+  - i.e., between $x - 2\hat\sigma_x$ and $x + 2\hat\sigma_x$
+  
+- About 99% of obs fall within three std. dev of mean  
+  - i.e., between $x - 3\hat\sigma_x$ and $x + 3\hat\sigma_x$
+
+```{r}
+# Example of normal distribution
+x <- seq(-5, 5, length.out = 100)  # Range of x values
+y <- dnorm(x, mean = 0, sd = 1)      # PDF values for the normal distribution
+
+# Plot the normal distribution
+plot(x, y, type = "l", lwd = 2, col = "blue", 
+     xlab = "x", ylab = "Density",
+     main = "Normal Distribution")
+
+# Add vertical lines for one, two, and three standard deviations
+abline(v = c(-1, 1), col = "red", lty = 2)  # One SD
+abline(v = c(-2, 2), col = "green", lty = 2)  # Two SD
+abline(v = c(-3, 3), col = "orange", lty = 2)  # Three SD
+
+# Add text annotations for the percentages
+text(-1, 0.35, "68%", col = "red", pos = 4)
+text(-2, 0.05, "95%", col = "green", pos = 4)
+text(-3, 0.005, "99.7%", col = "orange", pos = 4)
+
+```
+
+### Why is the empirical rule so important for inferential statistics?
+
+- If a variable has an approximately normal distribution, then we know how likely it would be to observe a variable that is a certain number of standard deviations away from the mean
+- For example: 
+  - only about 2.5% of observations have a value higher than two standard deviations or more from the mean; 
+  - the variable `norm_dist` has a mean of about `50` and a standard deviation of about `5`, so the value of `40` would be about two standard deviations below the mean. the empirical rule tells us that only about 2.5% of observations would have a value less than `40`
+- you might say, but most real-life variables are unlikely to have a normal distribution
+  - True! But the "sampling distribution" -- discussed below -- which is the basis for all inferential statistics/hypothesis testing, **always** has a normal distribution so long as our sample size is large enough
+  
+### Z-scores
+
+The "z-score" of an observation is the number of standard deviations away from the mean.
+
+The z-score formula
+
+- where $x$ is some variable of interest; subscript $i$ refers to observations
+- $z_i = (x_i - \bar{x})/(\hat{\sigma}_x)$
+- in words:
+  - z score for observation $i$ equals the difference between the observation $x_i$ and the mean $\bar{x}$ divided by the standard deviation $\hat{\sigma}_x$
+- Intuition behind z-score
+  - It is just the difference between an observation value and the mean value, scaled in terms of standard deviations
+  - That's why we say that the z-score represents the number of standard deviations away from the mean
+
+Calculating z-score for the variable `norm_dist` from data frame `df_generated_pop`
+```{r}
+# components of z-score
+mean(df_generated_pop$norm_dist, na.rm = TRUE)
+sd(df_generated_pop$norm_dist, na.rm = TRUE)
+
+#create new variable z_norm_dist
+df_generated_pop <- df_generated_pop %>% mutate(
+  z_norm_dist = (norm_dist - mean(norm_dist, na.rm = TRUE))/sd(norm_dist, na.rm = TRUE)
+)
+
+#list a few observations
+df_generated_pop %>% select(norm_dist,z_norm_dist)
+
+# mean of z-score variable
+round(mean(df_generated_pop$z_norm_dist, na.rm = TRUE), digits = 4)
+```
+
+Plot the new z-score variable, which has:
+
+- mean of about `0`
+- standard deviation of about `1`
+```{r}
+plot_distribution(df_generated_pop$z_norm_dist)
+```
+
+## Standard normal distribution
+
+Standard normal distribution is defined as a bell-shaped (i.e., normal) distribution that has a mean of `0` and a standard deviation of `1`
+
+Above, we created a variable `stdnorm_dist` in the data frame `df_generated_pop` that has a standard normal distribution. Let's investigate and plot this variable:
+```{r}
+mean(df_generated_pop$stdnorm_dist, na.rm = TRUE)
+sd(df_generated_pop$stdnorm_dist, na.rm = TRUE)
+
+plot_distribution(df_generated_pop$stdnorm_dist)
+```
+
+Traits of standard normal distribution:
+
+- The value of each observation is already in terms of z-scores. This means the value of each observation shows how many standard deviations it is from the mean.
+
+Question: if the variable has a standard normal distribution, would it be likely to see an observation with a value of 3?
+  - Answer: No. because a value of 3 would mean that the observation is three standard deviations greater than the mean. we know that for any variable with a normal distribution, less than 1% of observations have a value that is three standard deviations greater than the mean.
+
+

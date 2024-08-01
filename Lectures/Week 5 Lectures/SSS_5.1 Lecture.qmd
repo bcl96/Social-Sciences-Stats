@@ -1,0 +1,851 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 5.1 Inferential Statistics, about a single variable"
+format: pdf
+editor: source
+---
+Week 5: Learning goal - Formulate hypothesis testing both by hand and with infer commands for a single population mean. 
+
+ 
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+Lecture overview:
+
+- Inferential statistics, about single variable
+
+- Hypothesis testing about a (single) population mean (by hand)
+
+Load packages:
+```{r, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(labelled)
+library(patchwork)
+
+# Load ipeds dataset from course website
+load(url('https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/ipeds/output_data/panel_data.RData'))
+```
+
+
+```{r, echo=FALSE}
+# Create ipeds data frame with fewer variables/observations
+df_ipeds_pop <- panel_data %>%
+  # keep data from fall 2022
+  filter(year == 2022) %>%
+  # which universities to keep:
+    # 2015 carnegie classification: keep research universities (15,16,17) and master's universities (18,19,20)
+  filter(c15basic %in% c(15,16,17,18,19,20)) %>%
+  # which variables to keep
+  select(instnm,unitid,opeid6,opeid,control,c15basic,stabbr,city,zip,locale,obereg, # basic institutional characteristics
+         tuition6,fee6,tuition7,fee7, # avg tuition and fees for full-time grad, in-state and out-of-state
+         isprof3,ispfee3,osprof3,ospfee3, # avg tuition and fees for MD, in-state and out-of-state
+         isprof9,ispfee9,osprof9,ospfee9, # avg tuition and fees for Law, in-state and out-of-state
+         chg4ay3,chg7ay3,chg8ay3) %>% # [undergraduate] books+supplies; off-campus (not with family) room and board; off-campus (not with family) other expenses
+  # rename variables; syntax <new_name> = <old_name>
+  rename(region = obereg, # revion
+         tuit_grad_res = tuition6, fee_grad_res = fee6, tuit_grad_nres = tuition7, fee_grad_nres = fee7, # grad
+         tuit_md_res = isprof3, fee_md_res = ispfee3, tuit_md_nres = osprof3, fee_md_nres = ospfee3, # md
+         tuit_law_res = isprof9, fee_law_res = ispfee9, tuit_law_nres = osprof9, fee_law_nres = ospfee9, # law
+         books_supplies = chg4ay3, roomboard_off = chg7ay3, oth_expense_off = chg8ay3) %>% # [undergraduate] expenses
+  # create measures of tuition+fees
+  mutate(
+    tuitfee_grad_res = tuit_grad_res + fee_grad_res, # graduate, state resident
+    tuitfee_grad_nres = tuit_grad_nres + fee_grad_nres, # graduate, non-resident
+    tuitfee_md_res = tuit_md_res + fee_md_res, # MD, state resident
+    tuitfee_md_nres = tuit_md_nres + fee_md_nres, # MD, non-resident
+    tuitfee_law_res = tuit_law_res + fee_law_res, # Law, state resident
+    tuitfee_law_nres = tuit_law_nres + fee_law_nres) %>% # Law, non-resident  
+  # create measures of cost-of-attendance (COA) as the sum of tuition, fees, book, living expenses
+  mutate(
+    coa_grad_res = tuit_grad_res + fee_grad_res + books_supplies + roomboard_off + oth_expense_off, # graduate, state resident
+    coa_grad_nres = tuit_grad_nres + fee_grad_nres + books_supplies + roomboard_off + oth_expense_off, # graduate, non-resident
+    coa_md_res = tuit_md_res + fee_md_res + books_supplies + roomboard_off + oth_expense_off, # MD, state resident
+    coa_md_nres = tuit_md_nres + fee_md_nres + books_supplies + roomboard_off + oth_expense_off, # MD, non-resident
+    coa_law_res = tuit_law_res + fee_law_res + books_supplies + roomboard_off + oth_expense_off, # Law, state resident
+    coa_law_nres = tuit_law_nres + fee_law_nres + books_supplies + roomboard_off + oth_expense_off) %>% # Law, non-resident    
+  # keep only observations that have non-missing values for the variable coa_grad_res
+    # this does cause us to lose some interesting universities, but doing this will eliminate some needless complications with respect to learning core concepts about statistical inference
+  filter(!is.na(coa_grad_res))
+
+# Add variable labels to the tuit+fees variables and coa variables
+  # tuition + fees variables
+    var_label(df_ipeds_pop[['tuitfee_grad_res']]) <- 'graduate, full-time, resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_grad_nres']]) <- 'graduate, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_res']]) <- 'MD, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_nres']]) <- 'MD, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_res']]) <- 'Law, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_nres']]) <- 'Law, full-time, non-resident; avg tuition + required fees'
+    
+  # COA variables
+    var_label(df_ipeds_pop[['coa_grad_res']]) <- 'graduate, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_grad_nres']]) <- 'graduate, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_res']]) <- 'MD, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_nres']]) <- 'MD, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_res']]) <- 'Law, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_nres']]) <- 'Law, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+
+df_ipeds_pop %>% glimpse()
+
+
+##########
+########## Create data frame of generated variables, with each variable meant to represent the entire population
+##########
+
+
+num_obs <- 10000
+
+# Generate normal distribution w/ custom mean and sd
+set.seed(124)
+norm_dist <- rnorm(n = num_obs, mean = 50, sd = 5)
+
+# Generate right-skewed distribution
+set.seed(124)
+rskew_dist <- rbeta(n = num_obs, shape1 = 2, shape2 = 5)
+
+# Generate left-skewed distribution
+set.seed(124)
+lskew_dist <- rbeta(n = num_obs, shape1 = 5, shape2 = 2)
+
+# Generate standard normal distribution (default is mean = 0 and sd = 1)
+set.seed(124)
+stdnorm_dist <- rnorm(n = num_obs, mean = 0, sd = 1)  # equivalent to rnorm(10)
+
+# Create dataframe
+df_generated_pop <- data.frame(norm_dist, rskew_dist, lskew_dist, stdnorm_dist)
+
+# drop individual objects associated with each variable
+rm(norm_dist,rskew_dist,lskew_dist,stdnorm_dist)
+rm(num_obs)
+
+
+##########
+########## Create sample versions of generated population data frame and IPEDS population data frame
+##########
+
+# create sample version of our generated data
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_generated_sample <- df_generated_pop %>% sample_n(size = 200)
+  df_generated_sample %>% glimpse()
+
+
+# create sample version of our ipeds data
+
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_ipeds_sample <- df_ipeds_pop %>% sample_n(size = 200) 
+  
+  # compare mean of coa_grad_res between population and sample
+  mean(df_ipeds_pop$coa_grad_res, na.rm = TRUE)
+  mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE)
+
+
+##########
+# Create function to generate plots of variable distributions
+##########
+
+plot_distribution <- function(data_vec, plot_title = '') {
+  p <- ggplot(as.data.frame(data_vec), aes(x = data_vec)) +
+    ggtitle(plot_title) + xlab('') + ylab('') +
+    geom_histogram(aes(y = ..density..), alpha = 0.4, position = 'identity') +
+    geom_density() +
+    geom_vline(aes(xintercept = mean(data_vec, na.rm = T), color = 'mean'),
+               linetype = 'dotted', size = 0.8, alpha = 0.8) +
+    geom_vline(aes(xintercept = median(data_vec, na.rm = T), color = 'median'),
+               linetype = 'dotted', size = 0.8, alpha = 0.8) +
+    scale_color_manual(name = 'Statistics',
+                       labels = c(paste('Mean:', round(mean(data_vec, na.rm = T), 2),
+                                        '\nStd Dev:', round(sd(data_vec, na.rm = T), 2)),
+                                  paste('Median:', round(median(data_vec, na.rm = T), 2))),
+                       values = c(mean = 'blue', median = 'red')) +
+    theme(plot.title = element_text(size = 10, face = 'bold', hjust = 0.5),
+          legend.title = element_text(size = 9, face = 'bold'),
+          legend.text = element_text(size = 8))
+
+  p
+}
+
+
+##########
+# Write function to get the sampling distribution from a variable (defaults equal 500 samples of size 200)
+##########
+
+get_sampling_distribution <- function(data_vec, num_samples = 1000, sample_size = 200) {
+  sample_means <- vector(mode = 'numeric', num_samples)
+
+  for (i in 1:length(sample_means)) {
+    samp <- sample(data_vec, sample_size)
+    sample_means[[i]] <- mean(samp, na.rm = T)
+  }
+
+  sample_means
+}
+
+##########
+# Write Function to generate sampling distribution (with t-test value) assuming null hypothesis is correct
+##########
+
+
+# Function to generate t-distribution plot
+plot_t_distribution <- function(data_vec, mu, alpha = 0.05, alternative = 'two.sided', plot_title = '', shade_rejection = T, shade_pval = F, stacked = F) {
+  
+  data_vec <- na.omit(data_vec)
+  
+  # Calculate t-statistics
+  sample_size <- length(data_vec)
+  deg_freedom <- sample_size - 1
+  xbar <- mean(data_vec)
+  s <- sd(data_vec)
+  
+  std_err <- s / sqrt(sample_size)
+  t <- (xbar - mu) / std_err
+  
+  # Calculate critical value and p-value
+  if (alternative == 'less') {  # left-tailed
+    cv_lower <- qt(p = alpha, df = deg_freedom, lower.tail = T)
+    cv_legend <- round(cv_lower, 2)
+    cv_legend2 <- round(cv_lower * std_err + mu, 2)
+    pval <- round(pt(q = t, df = deg_freedom, lower.tail = T), 4)
+  } else if (alternative == 'greater') {  # right-tailed
+    cv_upper <- qt(p = alpha, df = deg_freedom, lower.tail = F)
+    cv_legend <- round(cv_upper, 2)
+    cv_legend2 <- round(cv_upper * std_err + mu, 2)
+    pval <- round(pt(q = t, df = deg_freedom, lower.tail = F), 4)
+  } else {  # two-tailed
+    cv_lower <- qt(p = alpha / 2, df = deg_freedom, lower.tail = T)
+    cv_upper <- qt(p = alpha / 2, df = deg_freedom, lower.tail = F)
+    cv_legend <- str_c('\u00B1', round(cv_upper, 2))
+    cv_legend2 <- str_c(round(cv_lower * std_err + mu, 2), ' & ', round(cv_upper * std_err + mu, 2))
+    pval_half <- round(pt(q = t, df = deg_freedom, lower.tail = t < 0), 4)
+    pval <- str_c(pval_half, ' + ', pval_half, ' = ', 2 * pval_half)
+  }
+  
+  # Plot t-distribution
+  p <- ggplot(data.frame(x = -c(-4, 4)), aes(x)) +
+    ggtitle(plot_title) + xlab('') + ylab('') +
+    stat_function(fun = dt, args = list(df = deg_freedom), xlim = c(-4, 4))
+  
+  # Shade rejection region using critical value
+  if (alternative != 'greater') {
+    p <- p + geom_vline(aes(xintercept = cv_lower, color = 'cval'),
+                        linetype = 'dotted', size = 0.8, alpha = 0.8)
+    
+    if (shade_rejection) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(-4, cv_lower),
+                             geom = 'area', alpha = 0.3, fill = 'red')
+    }
+    
+    if (shade_pval) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(-4, if_else(alternative == 'two.sided', -abs(t), t)),
+                             geom = 'area', alpha = 0.3, fill = 'blue')
+    }
+  }
+  if (alternative != 'less') {
+    p <- p + geom_vline(aes(xintercept = cv_upper, color = 'cval'),
+                        linetype = 'dotted', size = 0.8, alpha = 0.8)
+    
+    if (shade_rejection) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(cv_upper, 4),
+                             geom = 'area', alpha = 0.3, fill = 'red')
+    }
+    
+    if (shade_pval) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(if_else(alternative == 'two.sided', abs(t), t), 4),
+                             geom = 'area', alpha = 0.3, fill = 'blue')
+    }
+  }
+  
+  # Legend text
+  legend_text <- c('t-statistics / p-value', 'critical value / alpha')
+  
+  if (stacked) {
+    legend_text <- c(str_c('t-statistics: ', round(t, 2),
+                     '\n(p-value: ', str_extract(pval, '[\\d.-]+$'), ')'),
+                     str_c('Critical value: ', cv_legend,
+                     '\n(alpha: ', round(alpha, 2), ')'))
+  }
+  
+  stats_text <- c(str_c('t-statistics: ', round(t, 2)),
+                  str_c('SE: ', round(std_err, 2)),
+                  str_c('p-value: ', pval),
+                  str_c('Critical value: ', cv_legend),
+                  str_c('alpha: ', round(alpha, 2)))
+  
+  if (!stacked) {
+    p <- p +
+      annotate('text', size = 9*5/14, x = 4.84, y = 0.14, hjust = 0,
+               label = 'bold(Statistics)', parse = T) +
+      annotate('text', size = 8*5/14, x = 4.89, y = 0:4 * -0.015 + 0.12, hjust = 0,
+               label = stats_text)
+  }
+  
+  # Label plot
+  p <- p +
+    geom_vline(aes(xintercept = t, color = 'tstat'),
+               linetype = 'dotted', size = 0.8, alpha = 0.8) +
+    scale_x_continuous(sec.axis = sec_axis(trans = ~ . * std_err + mu)) +
+    scale_color_manual(name = if_else(stacked, 'Statistics', 'Legend'),
+                       breaks = c('tstat', 'cval'),
+                       labels = legend_text,
+                       values = c(tstat = 'blue', cval = 'red')) +
+    theme(plot.title = element_text(size = 10, face = 'bold', hjust = 0.5),
+          plot.margin = unit(c(5.5, if_else(stacked, 5.5, 30), 5.5, 5.5), 'pt'),
+          legend.title = element_text(size = 9, face = 'bold'),
+          legend.text = element_text(size = 8)) +
+    coord_cartesian(xlim = c(-4, 4),
+                    clip = 'off')
+
+  p
+}
+```
+
+# Fundamentals of inferential statistics
+Inferential statistics is a method to use quantitative data to answer questions we may have about a population that we are observing. Fundamentals of inferential statistics include: 
+
+- Hypothesis testing: This is also known as the test of significance, used by testing claims about populations by weighing quantitative evidence for or against a conclusion.
+
+- Confidence intervals: This method uses samples from targeted populations to estimate the true value of a parameter as a range of values.
+
+- Regression Analysis: This method finds trends in data and predict future values of a time series.
+
+- Correlation: This is a  statistical test used to determine if there is a statistically significant relationship between two variables.
+
+- T-test: This method compares the values of two groups in order to determine if there is a significant difference between two data sets from the same population.
+
+- ANOVA: This test is used to make inferences about population means for any number of groups and independent variables.
+
+- Chi-squared test: This test is used to help draw conclusions about a population based on a sample, such as whether two variables are related in the population. 
+
+As you continue on learning about statistics, you will encounter the rest of these methods. Today we are going to start with hypothesis testing about a single population mean. 
+
+# Hypothesis testing about a (single) population mean
+
+## What and Why hypothesis testing
+
+Quantitative research in social sciences often proceeds as follows:
+
+- Develop a research question (which guides our research)
+- Develop one (or more) testable hypothesis based on that research question
+- Obtain data necessary to test the hypothesis
+- Test the hypothesis by applying an appropriate statistical test to the data
+
+Some examples of research questions co-authors and I have answered over the years:
+
+- What is the relationship between state appropriations and nonresident enrollment at public universities [@RN3753]?
+- What is the effect of nonresident enrollment growth on the number of resident students enrolled at public research universities [@RN4290]?
+- What is the effect of participation in the Mexican American Studies program on the probability of high school graduation for students in the Tucscon Unified School District [@RN3292]?
+- Are high schools with a higher percentage of white students more likely to receive recruiting visits from university admissions officer than high schools with a lower percentage of white students [@RN4450]?
+
+For each of these journal articles, we answered the research question by developing a "testable hypothesis" and testing that hypothesis using some statistical test
+
+Developing testable hypothesis is central to univariate statistical analysis (one variable), bivariate statistical analysis (two variables), and multivariate statistical analysis (3+ variables, usually a regression model)
+
+Example hypotheses for univariate, bivariate, multivariate statistical analyses
+
+- Univariate statistics (hypothesis tests about a single population mean)
+  - Hypothesis: the average annual cost of attendance for graduate school (tuition + fees + living expenses) is $50,000
+- Bivariate statistics [hypothesis tests about comparing two population means]
+  - Hypothesis: the average annual cost of attendance for graduate school (tuition + fees + living expenses) at private universities is higher than public universities
+  - Hypothesis: the average annual cost of attendance for graduate school (tuition + fees + living expenses) at universities in urban areas is higher than universities in suburban areas
+- Multivariate statistics (usually a regression model with one dependent variable, one independent variable of interest, and one or more "control" variables)
+  - where dependent variable (Y) = cost of attendance; independent variable of interest (X) = private or public university; control variable = level of urbanization
+  - Hypothesis: cost of attendance for graduate school is higher at private universities than public universities, even after controlling for level of urbanization
+
+
+Why learn how to do hypothesis testing about a single population mean when this class is supposed to be about regression (and hypothesis tests about regression models)?
+
+- You must learn the general principles/concepts about using point-estimates from sample data to test hypotheses about population parameters
+- The simplest practical application of these general principles/concepts is testing hypotheses about the value of a single population mean
+- The concepts/steps for hypotheses tests about a single population mean are exactly the same as those for testing hypotheses about regression models
+
+
+## Overview of steps in hypothesis testing
+
+These are the general steps in hypothesis testing:
+
+1. **Hypothesis**
+    - formally state your "null" and "alternative" hypothesis
+1. **Assumptions**
+    - state assumptions that are relied upon by the statistical test you are using to test your hypothesis
+1. **Test statistic**
+    - Using some appropriate statistical analysis, calculate the "test statistic" necessary to test your hypothesis
+1. **p-value (means probability value)**
+    - calculate the probability of observing a test statistic as large or larger as the one you calculated
+1. **Alpha level/rejection region and conclusion**
+    - decide on the "alpha level," the p-value associated with rejection of the null hypothesis
+    - compare the p-value you you observed to the alpha level and make a conclusion about your hypothesis test
+
+
+In real research projects, do researchers always follow these exact steps? In this exact order?
+
+- Yes, they follow these steps
+- But researchers do not necessarily follow steps in this exact order
+  - e.g., usually, you would decide on an "alpha level" (rejection region) prior to conducting the statistical analysis
+- Often, researchers will not write out each step as formally as we will ask you all to do. 
+  - We ask you to write out each step to give you practice. Later in the quarter, you won't have to write out each step
+
+Example we will use to introduce steps in hypothesis testing
+
+- The population mean cost of attendance (COA) for full-time (resident) graduate students, $\mu_Y$, is `$28,000`
+
+
+How we will teach you the steps in hypothesis testing in this lecture
+
+- First, Introduce individual steps in detail, so that you develop a deep, conceptual understanding of each step
+  - But when thinking about an individual step in detail, it can be hard to remember its relationship to other steps and to hypothesis testing as a whole
+- Second, we will do another pratical example, where we work through all steps more quickly
+  - so you can get a better sense of the hypothesis testing process as a whole and the relationships between steps
+
+
+## Hypotheses
+
+This section presents a more formal introduction to hypotheses, focusing on univariate statistical analyses rather than bivariate or multivariate
+
+Recall that the goal of inferential statistics is to make statements about a population of interest based on data from a representative sample from the population. 
+
+- We make a hypotheses about a population parameter (e.g., population mean of variable $Y$ denotes $\mu_Y$)
+- Knowing the true value of the population parameter would require having data on all observations in the population
+- Usually, we do not have data on the entire population
+- We use sample data to test hypotheses about the population
+
+
+Definition
+
+- In statistics, a **hypothesis** is a declarative statement about a population.
+
+
+In univariate statistical analyses, we make a hypothesis about one population paramaeter (e.g., population mean $\mu_Y$) from one population of interest (e.g., all "research" universities and "master's" universities, as defined by the Carnegie Classification)
+
+
+```{r}
+df_ipeds_pop %>% glimpse()
+
+mean(df_ipeds_pop$coa_grad_res, na.rm = TRUE)
+```
+
+### Null and Alternative hypothesis
+
+When developing a hypothesis for quantitative research, we always specify a **null hypothesis ($H_0$)** AND an **alternative hypothesis ($H_a$)**
+
+
+**Null hypothesis ($H_0$)**
+
+- In univariate statistics, a null hypothesis ($H_0$) is a declarative statement that the population parameter has a specific value
+- (in words) $H_0:$ the population mean cost of attendance for for full-time (resident) graduate students, $\mu_Y$, is `$28,000`
+- (using symbols) $H_0:\mu_Y = \mu_{Y0} = \$28,000$
+    - where $\mu_{Y0}$ refers to the parameter value associated with the null hypothesis
+    - when testing a hypothesis about a single population mean, we can refer to $\mu_{Y0}$ as the "null population mean"
+
+
+**Alternative hypothesis ($H_a$)**
+
+- An alternative hypothesis ($H_a$) is a declarative statement that the population parameter falls in some alternative range of values as compared to the value declared by the null hypothesis
+- There are two kinds of alternative hypotheses: two-sided; and one-sided
+- for a given null hypothesis ($H_0$), there will always be one two-sided alternative hypothesis and two different one-sided hypotheses
+
+Two-sided alternative hypothesis
+
+- (in words) $H_a:$ the population mean mean cost of attendance for for full-time (resident) graduate students, $\mu_Y$, is not equal to `$28,000`
+- (using symbols) $H_a:\mu_Y \neq \$28,000$
+
+
+One-sided alternative hypothesis (mean is greater than $\$28,000$)
+
+- (in words) $H_a:$ the population mean mean cost of attendance for for full-time (resident) graduate students, $\mu_Y$, is greater than `$28,000`
+- (using symbols) $H_a:\mu_Y > \$28,000$
+
+One-sided alternative hypothesis (mean is less than $\$28,000$)
+
+- (in words) $H_a:$ the population mean mean cost of attendance for for full-time (resident) graduate students, $\mu_Y$, is less than `$28,000`
+- (using symbols) $H_a:\mu_Y < \$28,000$
+
+
+**Example of null and alternative hypotheses for bivariate statistical analysis**
+
+Research question: 
+
+- Is the population mean annual cost of attendance for graduate school at public universities ($\mu_{Y_{{pub}}}$) different from the population mean annual cost of attendance for graduate school at private universities ($\mu_{Y_{{priv}}}$)?
+
+Null and alternative hypotheses
+
+- null hypothesis ($H_0$)
+  - (in words): $H_0:$ the population mean annual cost of attendance for graduate school at public universities ($\mu_{Y_{{pub}}}$) is the same as the population mean annual cost of attendance for graduate school at private universities ($\mu_{Y_{{priv}}}$)
+  - (symbols): $H_0: \mu_{Y_{{pub}}} = \mu_{Y_{{priv}}}$
+- Two-sided alternative hypothesis
+  - (in words): $H_a:$ the population mean annual cost of attendance for graduate school at public universities ($\mu_{Y_{{pub}}}$) is different than the population mean annual cost of attendance for graduate school at private universities ($\mu_{Y_{{priv}}}$)
+  - (symbols): $H_a: \mu_{Y_{{pub}}} \neq \mu_{Y_{{priv}}}$
+- One-sided alternative hypothesis ($pub < priv$)
+  - (in words): $H_a:$ the population mean annual cost of attendance for graduate school at public universities ($\mu_{Y_{{pub}}}$) is less than than the population mean annual cost of attendance for graduate school at private universities ($\mu_{Y_{{priv}}}$)
+  - (symbols): $H_a: \mu_{Y_{{pub}}} < \mu_{Y_{{priv}}}$
+  - note: this is the same as a one-sided hypothesis where we hypothesize $priv > pub$
+- One-sided alternative hypothesis ($pub > priv $)
+  - (in words): $H_a:$ the population mean annual cost of attendance for graduate school at public universities ($\mu_{Y_{{pub}}}$) is greater than than the population mean annual cost of attendance for graduate school at private universities ($\mu_{Y_{{priv}}}$)
+  - (symbols): $H_a: \mu_{Y_{{pub}}} > \mu_{Y_{{priv}}}$
+  - note: this is the same as a one-sided hypothesis where we hypothesize $priv < pub$
+
+
+### Two-sided or one-sided alternative hypotheses?
+
+In real research projects, we are not usually testing a hypothesis about a single population mean (univariate analysis). Rather, we are usually comparing population means of two different groups (bivariate analysis) or we are examining the relationship between an independent variable and the dependent variable after controlling for other variables (multivariate regression analysis)
+
+
+Prior to conducting analyses, we usually have an expectation/suspicion about the result
+
+- For most bivariate analyses, we usually suspect that one particular group is has a higher mean value than the other
+  - e.g., we suspect that mean cost of attendance at private universities
+  - this suggests a one-sided alternative hypothesis $H_a$
+- For most multivariate analyses, we usually suspect the direction of the relationship between $X$ and $Y$
+  - e.g., we expect that "hours spent studying" ($X$) has a positive relationship with "grade point average" ($Y$) rather than thinking "the relationship between hours spent studying ($X$) and grad point average ($Y$) does not equal zero
+  - this suggests a one-sided alternative hypothesis $H_a$
+  
+
+Should we specify two-sided or one-sided alternative hypothesis, $H_a$?
+
+- For univariate and bivariate statistical analyses, researchers specify a two-sided alternative hypothesis more often than a one-sided alternative alternative hypothesis
+  - often, researchers specify a two-sided alternative hypothesis even when they strongly believe one particular group has a larger population mean then the other
+- For multivariate regression analyses, researchers **always** specify and test two-sided alternative hypotheses
+  - even when they strongly believe the relationship between $X$ and $Y$ is positive; and even when they strongly believe the relationship between $X$ and $Y$ is positive
+- Why this preference for two-sided alternative hypotheses in real research projects?
+  - two-sided alternative hypotheses are more "conservative" than one-sided alternative hypotheses; 
+  - that is, if you specify a two-sided alternative hypothesis, $H_a$, and reject the null hypothesis, $H_0$, then it is necessarily true that we would have rejected then null hypothesis, $H_0$, had we specified a one-sided alternative hypothesis, $H_a$
+  
+## Test statistic
+
+restate null, $H_0$, and alternative (two-sided), $H_a$, hypothesis for our practical example
+
+- $H_0$
+  - (in words) $H_0:$ the population mean cost of attendance for for full-time (resident) graduate students, $\mu_Y$, is $28,000
+  - (symbols) $H_0: \mu_Y = \mu_{Y0} = \$28,000$
+- $H_a$
+  - (in words) $H_a:$ the population mean mean cost of attendance for for full-time (resident) graduate students, $\mu_Y$, is not equal to $28,000
+  - (symbols) $H_a: \mu_Y \ne \$28,000$
+
+
+We must conduct a formal statistical test to decide whether we should reject the null hypothesis
+
+- this is true for testing hypotheses about a population mean from a single population; testing hypotheses about whether two population means are equal; testing hypotheses about a regression coefficient, etc.
+- **key to understanding hypothesis testing**: We conduct our test under the assumption that the null hypothesis, $H_0$, is true
+
+Logic of the test statistic
+
+- What the test statistic calculates
+  - if the null hypothesis is true, how unlikely would it be to randomly draw the sample estimate (e.g., sample mean $\bar{Y}$) at least as far away from the null hypothesis value as the one we observed in our single random sample
+  - e.g., "if the null hypothesis is true, there is a 1.5% chance of observing a sample mean at least as far away from the null hypothesis value ($\mu_{Y0} = \$28,000$) as the one we observed in our single random sample
+- Logic of the test statistic  
+  - if -- under the assumption that the null hypothesis is true -- it would be very unlikely to observe the sample estimate we observed, then it is unlikely that the null hypothesis is true
+
+
+
+**General formula for test statistic (for pretty much any kind of hypothesis test)**:
+
+$$ test\_statistic = \frac{sample\_estimate - value\_associated\_with\_H_0}{sample\_standard\_error}$$
+**Formula for test statistic about a single population mean**
+
+- in words: 
+  - test-statistic $t$ equals difference between the sample mean $\bar{Y}$ and the population mean associated with the null hypothesis $\mu_{Y0}$ divided by the sample standard error of the sample mean $\hat{\sigma}_{\bar{Y}}$
+- equation:
+  - $t = \frac{\bar{Y} - \mu_{Y0}}{\hat{\sigma}_{\bar{Y}}}$
+- where:
+  - $\hat{\sigma}_{Y}$ refers to sample standard deviation of variable $Y$
+  - $n$ refers to sample size
+  - sample standard error of the sample mean $= \hat{\sigma}_{\bar{Y}} = \frac{\hat{\sigma}_{Y}}{\sqrt{n}}$
+
+**Calculating t-test statistic for our practical example**
+
+$H_0: \mu_Y = \mu_{Y0} = \$28,000$ ; $H_a: \mu_Y \ne \$28,000$
+
+Calculate components of t-test (using functions and by hand)
+```{r}
+# sample size
+  length(df_ipeds_sample$coa_grad_res) # assuming no missing observations
+  df_ipeds_sample %>% summarize(n_non_miss = sum(!(is.na(coa_grad_res)))) # count only number of non-missing
+
+# sample mean of coa_grad_res
+  mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE) # using function
+  
+# sample standard deviation of coa_grad_res
+  sd(df_ipeds_sample$coa_grad_res, na.rm = TRUE)
+
+# sample standard error of sample mean of coa_grad_res = std_dev/sqrt(n)
+  sd(df_ipeds_sample$coa_grad_res, na.rm = TRUE)/sqrt(length(df_ipeds_sample$coa_grad_res))
+
+```
+Components of t-test:
+
+- sample size, $n$ = `r length(df_ipeds_sample$coa_grad_res)`
+- sample mean, $\bar{Y}$ = `r round(mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE), digits = 4)`
+- Population mean associated with $H_0$, $\mu_{Y0} = \$28,000$
+- sample standard deviation, $\hat{\sigma}_{Y}$ = `r round(sd(df_ipeds_sample$coa_grad_res, na.rm = TRUE), digits = 4)`
+- sample standard error of the sample mean, $\hat{\sigma}_{\bar{Y}}$ = `r round(sd(df_ipeds_sample$coa_grad_res, na.rm = TRUE)/sqrt(length(df_ipeds_sample$coa_grad_res)), digits = 4)`
+
+
+Calculating t-test
+
+$$t = \frac{\bar{Y} - \mu_{Y0}}{\hat{\sigma}_{\bar{Y}}} = \frac{30002.74 - 28000}{810.1332} = 2.4721$$
+
+**`t.test()` function**
+
+- what `t.test()` does
+  - "Performs one and two sample t-tests on vectors of data"
+  - we use one sample t-test to test hypothesis about single population mean
+  - later, we will use two-samle t-test to test hypotheses about whether two population means are equal
+- syntax:
+  - `t.test(x, y = NULL, alternative = c("two.sided", "less", "greater"), mu = 0, paired = FALSE, var.equal = FALSE, conf.level = 0.95, ...)`
+- selected arguments
+  - `x`: vector (variable) you want to calculate t-test for
+  - `alternative`: whether you want two-sided or one-sided alternative hypothesis (default is `two.sided`)
+  - `mu`: value associated with null hypothesis (default is `0`)
+
+Calculating t-test value (using function and by hand)
+```{r}
+# t-statistic = (sample_mean - mu_H_0)/(sample std err)
+  
+# using function
+#?t.test # to see help file for function
+t.test(x = df_ipeds_sample$coa_grad_res, mu = 28000)
+
+# by hand
+(mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE) - 28000)/(sd(df_ipeds_sample$coa_grad_res, na.rm = TRUE)/sqrt(length(df_ipeds_sample$coa_grad_res)))
+```
+
+### Conceptual understanding of test statistic (**MOST IMPORTANT!**)
+
+The test statistic refers to a **sampling distribution** not the distribution of your single sample
+
+- in particular, the test statistic refers to the sampling distribution under the assumption that the null hypothesis is true, $H_0: \mu_Y = \mu_{Y0}$
+
+Recall core ideas of sampling distribution (we will refer to sampling distribution of sample mean, $\bar{Y}$)
+
+- The sampling distribution of the sampling mean is a distribution where each observation is a sample mean, $\bar{Y}$, from one random sample taken from the population
+- The sampling distribution shows how the value of the sample mean varies from sample to sample
+- Standard error (i.e., the standard deviation of the sampling distribution), $\hat{\sigma}_{\bar{Y}}$ is the average distance between one random sample mean, $\bar{Y}$, and the mean of sample means $\bar{Y}_{\bar{Y}}$
+  - (Note: we refer to sample standard error of the sample mean $\hat{\sigma}_{\bar{Y}} = \frac{\hat{\sigma}_{Y}}{\sqrt{n}}$, which can be calculated from sample data, rather than population standard error of the sample mean $\sigma_{\bar{Y}}$, which is a population parameter that is only known if we have data on the entire population)
+- Drawing from the central limit theorem, we know that sampling distributions will always be normally distributed so long as sample size is not small
+- Therefore, sampling distributions follow the empirical rule:
+  - 68% of observations within one standard error
+  - 95% of observations wtithin two standard erros
+  - 99% of observations within three standard errors
+
+
+Here we visually stack the following for the variable `coa_grad_res`: 
+
+- the population distribution; distribution from a single random sample; and sampling distribution of sample mean
+
+```{r}
+plot_distribution(df_ipeds_pop$coa_grad_res, plot_title = 'Population distribution') +
+  plot_distribution(df_ipeds_sample$coa_grad_res, plot_title = 'Single sample distribution') +
+  plot_distribution(get_sampling_distribution(df_ipeds_pop$coa_grad_res), plot_title = 'Sampling distribution') +
+  plot_layout(ncol = 1)
+```
+
+
+**Usually we cannot know the sampling distribution because we do not have data on the entire population; we only have data on our single random sample**
+
+
+However, hypothesis testing is not based on the true sampling distribution of the sample mean. It is based on the sampling distribution under the assumption that the null hypothesis is correct
+
+- Thanks to the central limit theorem, we have a pretty good idea of the sampling distribution assuming $H_0$ is true, even when we only have a single random sample!
+
+
+Here we visually stack the following for the variable `coa_grad_res`: 
+
+- the population distribution; distribution from a single random sample; and sampling distribution of assuming that $H_0$ is true
+
+```{r}
+plot_distribution(df_ipeds_pop$coa_grad_res, plot_title = 'Population distribution') +
+  plot_distribution(df_ipeds_sample$coa_grad_res, plot_title = 'Single sample distribution') +
+  plot_t_distribution(df_ipeds_sample$coa_grad_res, mu = 28000,shade_rejection = F, shade_pval = T, plot_title = 'Sampling distribution, assuming H_0') +
+  plot_layout(ncol = 1)
+```
+
+
+The t-test statistic is the distance between the hypothesized $H_0$ value and the observed sample estimate value $\bar{Y}$ scaled in terms of standard errors
+
+- e.g., it would be unlikely to observe a t-value of greater than `2` or a t-value less than `-2` because we know (from empirical rule and central limit theorem) that 95% of observations fall within two standard deviations of the mean for a normally distributed variable
+
+## p-value
+
+"p-value" refers to the probability-value associated with the t-value from your test statistic
+
+Definition
+
+- Under the assumption that $H_0$ is true, the **p-value** is the probability of observing a sample estimate (and its associated test-statistic) that is at least as far away from the null hypothesis value $\mu_{Y0}$ as the one we observed
+
+
+A small p-value means that it would be unusual to find the sample estimate we observed if the null hypothesis $H_0$ is find the observed data if 𝐻0were true.
+
+
+Calculating p-value For a two-sided alternative hypothesis ($H_a: \mu_Y \neq \mu_{Y0}$)
+
+- let $t$ be the value of your t-test
+- let $p$ by the p-value associated with $t$
+- let $Pr(obs>t)$ is the probability of an observation having a higher value of $t$ than the one you observed
+- $p = Pr(obs > t) + Pr(obs< -t)$
+- Because the sampling distribution is symmetric (because it is normally distributed):
+  - $Pr(obs >t) = Pr(obs < - t)$
+- therefore, for a two-sided alternative hypothesis
+  - $p = 2*Pr(obs > t)$
+
+
+
+Let's calculate and visualize p-value for a couple different hypothesized values of the population mean $\mu_{Y0}$ for the variable `coa_grad_res` (full-time, resident grad school cost of attendance) from the data frame `df_ipeds_sample`
+
+
+$H_0: \mu_Y = \mu_{Y0} = \$29,000$ and $H_a: \mu_Y \neq \$29,000$
+
+- Sample mean, $\bar{Y} =$ `r round(mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE), digits = 4)`
+- $t =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 29000)$statistic, digits=2)`
+- p-value $= Pr(obs > t) + Pr(obs< -t) =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 29000)$p.value, digits=3)`
+  - $Pr(obs>t)=$ `r round((t.test(x = df_ipeds_sample$coa_grad_res, mu = 29000)$p.value)/2, digits=4)`
+  - $Pr(obs<-t)=$ `r round((t.test(x = df_ipeds_sample$coa_grad_res, mu = 29000)$p.value)/2, digits=4)`
+- below code chunk runs t-test and plots t-value against sampling distribution assuming $H_0$ is true
+
+```{r}
+mean(x = df_ipeds_sample$coa_grad_res)
+t.test(x = df_ipeds_sample$coa_grad_res, mu = 29000)
+plot_t_distribution(df_ipeds_sample$coa_grad_res, mu = 29000,shade_rejection = F, shade_pval = T)
+```
+
+
+$H_0: \mu_Y = \mu_{Y0} = \$28,000$ and $H_a: \mu_Y \ne \$28,000$
+
+- Sample mean, $\bar{Y} = $ `r round(mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE), digits = 4)`
+- $t =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 28000)$statistic, digits=2)`
+- p-value $= Pr(obs > t) + Pr(obs< -t) =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 28000)$p.value, digits=3)`
+  - $Pr(obs>t)=$ `r round((t.test(x = df_ipeds_sample$coa_grad_res, mu = 28000)$p.value)/2, digits=4)`
+  - $Pr(obs<-t)=$ `r round((t.test(x = df_ipeds_sample$coa_grad_res, mu = 28000)$p.value)/2, digits=4)`
+- below code chunk runs t-test and plots t-value against sampling distribution assuming $H_0$ is true
+
+```{r}
+mean(x = df_ipeds_sample$coa_grad_res)
+t.test(x = df_ipeds_sample$coa_grad_res, mu = 28000)
+plot_t_distribution(df_ipeds_sample$coa_grad_res, mu = 28000,shade_rejection = F, shade_pval = T)
+```
+
+
+
+$H_0: \mu_Y = \mu_{Y0} = \$31,500$ and $H_a: \mu_Y \neq \$31,500$
+
+- Sample mean, $\bar{Y} =$ `r round(mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE), digits = 4)`
+- $t =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 31500)$statistic, digits=2)`
+- p-value $= Pr(obs > t) + Pr(obs< -t) =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 31500)$p.value, digits=3)`
+  - $Pr(obs>t)=$ `r round((t.test(x = df_ipeds_sample$coa_grad_res, mu = 31500)$p.value)/2, digits=4)`
+  - $Pr(obs<-t)=$ `r round((t.test(x = df_ipeds_sample$coa_grad_res, mu = 31500)$p.value)/2, digits=4)`
+- below code chunk runs t-test and plots t-value against sampling distribution assuming $H_0$ is true
+
+```{r}
+mean(x = df_ipeds_sample$coa_grad_res)
+t.test(x = df_ipeds_sample$coa_grad_res, mu = 31500)
+plot_t_distribution(df_ipeds_sample$coa_grad_res, mu = 31500)
+```
+
+## Rejection region and conclusion
+
+### Alpha level (rejection region)
+
+$\alpha$ level (referred to as "alpha level" or "rejection region")
+
+- Definition: $\alpha$ level is a number such that we reject the null hypothesis $H_0$ the observed p-value is less than or equal to the alpha level.
+
+
+In practice, the most common alpha level $\alpha$ is `.05`
+
+- e.g., if we choose $\alpha= .05$ and our t-statistic is associated with a p-value of .02, then we reject $H_0$; if we choose $\alpha= .05$ and our t-statistic is associated with a p-value of .07, then we do not reject $H_0$
+- sometimes researchers choose an alpha level of `.10` but usually this is viewed as not sufficiently strong threshold to reject $H_0$
+
+
+Usually, you define alpha level **prior** to running analyses
+
+- when researchers define alpha level (rejection region) *after* running analyses, there may be a temptation to choose an alpha level that allows them to reject $H_0$
+
+
+To show how alpha level is used in practice, we'll test the null hypothesis that population mean grad resident cost of attendance is `28,500`, initially using an alpha level of .05
+
+- $H_0: \mu_Y = \mu_{Y0} = \$28,500$ and $H_a: \mu_Y \neq \$28,500$
+- Sample mean, $\bar{Y} =$ `r round(mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE), digits = 4)`
+- $t =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$statistic, digits=2)`
+- p-value $= Pr(obs > t) + Pr(obs< -t) =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$p.value, digits=3)`
+  - $Pr(obs>t)=$ `r round((t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$p.value)/2, digits=4)`
+  - $Pr(obs<-t)=$ `r round((t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$p.value)/2, digits=4)`
+
+
+Note that the `t.test()` function doesn't have an argument that let's you specify the alpha level (rejection region); rather, the idea is that you choose the alpha level and then compare that to the p-value calculated by `t.test()`
+```{r}
+t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)
+```
+
+
+Note that the user-defined `plot_t_distribution()` includes an optional argument that allows you to specify the alpha-level
+
+- syntax (including default argument values for arguments with defaults)
+  - `plot_t_distribution(data_vec, mu, alpha = 0.05, alternative = 'two.sided', plot_title = '')`
+  - So we can set the alpha level with the argument `alpha`, which has the default value of `0.05`  
+
+Below, we run `plot_t_distribution()`, manually setting the `alpha` argument to the the default value of `0.05`  
+
+- the blue dotted line denotes the t-value from our test statistic
+  - $t =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$statistic, digits=2)`
+- the red dotted lines denote the t-value associated with the chosen alpha level (rejection region)
+  - the t-value associated with the alpha level is referred to as the "critical value"
+  - the t-statistic of `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$statistic, digits=2)` is less than the critical value of 1.97, indicating that we won't reject $H_0$
+- the shaded region denotes the probability associated with the chosen alpha level
+  - given our choice of `alpha = .05`, the shaded region represents .05, that is the percent of all observations that lie in the rejection region
+  - our p-value of `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 29000)$p.value, digits=3)` is greater than our alpha level of .05, indicating that we won't reject $H_0$
+- Since our p-value is greater than our alpha level, we do not reject $H_0$
+
+```{r}
+plot_t_distribution(df_ipeds_sample$coa_grad_res, mu = 28500, alpha = .05)
+```
+
+How would our conclusion change if we chose an alpha level of .10?
+
+- $H_0: \mu_Y = \mu_{Y0} = \$28,500$ and $H_a: \mu_Y \ne \$28,500$
+- Sample mean, $\bar{Y} =$ `r round(mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE), digits = 4)`
+- $t =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$statistic, digits=2)`
+- p-value $= Pr(obs > t) + Pr(obs< -t) =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$p.value, digits=3)`
+  - $Pr(obs>t)=$ `r round((t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$p.value)/2, digits=4)`
+  - $Pr(obs<-t)=$ `r round((t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$p.value)/2, digits=4)`
+- Since our p-value of `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$p.value, digits=3)` is less than the alpha level of .10, we reject $H_0$
+
+
+```{r}
+plot_t_distribution(df_ipeds_sample$coa_grad_res, mu = 28500, alpha = .10)
+```
+
+### Conclusion
+
+Last step is to make a conclusion about your hypothesis based on comparing the p-value you observed to the alpha level
+
+
+**How to state the conclusion**
+
+- if p-value is greater than the alpha level $\alpha$ (e.g., $p-val =.06, \alpha = .05$)
+  - conclusion: do not reject $H_0$
+  - longer version: "We do not have sufficient evidence to reject the null hypothesis, $H_0$, that population mean $\mu_Y$ is equal to $\mu_{Y0}$"
+  - do not say "we accept $H_0$ because we don't know the exact value of the population parameter
+- if p-value is less than the alpha level $\alpha$ (e.g., $p-val =.04, \alpha = .05$)
+  - conclusion: we reject $H_0$
+    - can also say "we accept $H_a$, but people usually say "reject $H_0$
+  - longer version: "we reject the null hypothesis $H_0$, that population mean $\mu_Y$ is equal to $\mu_{Y0}$"
+
+
+This example:
+
+- $H_0: \mu_Y = \mu_{Y0} = \$28,500$ and $H_a: \mu_Y \ne \$28,500$ and alpha level $\alpha = .05$
+- p-value $= Pr(obs > t) + Pr(obs< -t) =$ `r round(t.test(x = df_ipeds_sample$coa_grad_res, mu = 28500)$p.value, digits=3)`
+- conclusion:
+  - do not reject $H_0$
+  - We do not have sufficient evidence to reject the null hypothesis, $H_0$, that population mean full-time resident graduate cost of attendance is equal to `28,500`
+
+```{r}
+plot_t_distribution(df_ipeds_sample$coa_grad_res, mu = 28500, alpha = .05,
+                    shade_rejection = TRUE, shade_pval = FALSE)
+```

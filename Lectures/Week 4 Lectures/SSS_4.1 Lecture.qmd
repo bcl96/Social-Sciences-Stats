@@ -1,0 +1,400 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 4.1 Sampling Distribution"
+format: pdf
+editor: source
+---
+Week 4: Learning goal - Apply understanding of central limit theorem and sampling distributions towards how to evaluate inferential statistics in R. 
+
+
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+Lecture overview:
+
+- Central Limit Theorem
+
+- Sampling Distributions 
+
+Load packages:
+```{r, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(labelled)
+library(patchwork)
+
+# Load ipeds dataset from course website
+load(url('https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/ipeds/output_data/panel_data.RData'))
+```
+
+```{r, echo=FALSE}
+# Create ipeds data frame with fewer variables/observations
+df_ipeds_pop <- panel_data %>%
+  # keep data from fall 2022
+  filter(year == 2022) %>%
+  # which universities to keep:
+    # 2015 carnegie classification: keep research universities (15,16,17) and master's universities (18,19,20)
+  filter(c15basic %in% c(15,16,17,18,19,20)) %>%
+  # which variables to keep
+  select(instnm,unitid,opeid6,opeid,control,c15basic,stabbr,city,zip,locale,obereg, # basic institutional characteristics
+         tuition6,fee6,tuition7,fee7, # avg tuition and fees for full-time grad, in-state and out-of-state
+         isprof3,ispfee3,osprof3,ospfee3, # avg tuition and fees for MD, in-state and out-of-state
+         isprof9,ispfee9,osprof9,ospfee9, # avg tuition and fees for Law, in-state and out-of-state
+         chg4ay3,chg7ay3,chg8ay3) %>% # [undergraduate] books+supplies; off-campus (not with family) room and board; off-campus (not with family) other expenses
+  # rename variables; syntax <new_name> = <old_name>
+  rename(region = obereg, # revion
+         tuit_grad_res = tuition6, fee_grad_res = fee6, tuit_grad_nres = tuition7, fee_grad_nres = fee7, # grad
+         tuit_md_res = isprof3, fee_md_res = ispfee3, tuit_md_nres = osprof3, fee_md_nres = ospfee3, # md
+         tuit_law_res = isprof9, fee_law_res = ispfee9, tuit_law_nres = osprof9, fee_law_nres = ospfee9, # law
+         books_supplies = chg4ay3, roomboard_off = chg7ay3, oth_expense_off = chg8ay3) %>% # [undergraduate] expenses
+  # create measures of tuition+fees
+  mutate(
+    tuitfee_grad_res = tuit_grad_res + fee_grad_res, # graduate, state resident
+    tuitfee_grad_nres = tuit_grad_nres + fee_grad_nres, # graduate, non-resident
+    tuitfee_md_res = tuit_md_res + fee_md_res, # MD, state resident
+    tuitfee_md_nres = tuit_md_nres + fee_md_nres, # MD, non-resident
+    tuitfee_law_res = tuit_law_res + fee_law_res, # Law, state resident
+    tuitfee_law_nres = tuit_law_nres + fee_law_nres) %>% # Law, non-resident  
+  # create measures of cost-of-attendance (COA) as the sum of tuition, fees, book, living expenses
+  mutate(
+    coa_grad_res = tuit_grad_res + fee_grad_res + books_supplies + roomboard_off + oth_expense_off, # graduate, state resident
+    coa_grad_nres = tuit_grad_nres + fee_grad_nres + books_supplies + roomboard_off + oth_expense_off, # graduate, non-resident
+    coa_md_res = tuit_md_res + fee_md_res + books_supplies + roomboard_off + oth_expense_off, # MD, state resident
+    coa_md_nres = tuit_md_nres + fee_md_nres + books_supplies + roomboard_off + oth_expense_off, # MD, non-resident
+    coa_law_res = tuit_law_res + fee_law_res + books_supplies + roomboard_off + oth_expense_off, # Law, state resident
+    coa_law_nres = tuit_law_nres + fee_law_nres + books_supplies + roomboard_off + oth_expense_off) %>% # Law, non-resident    
+  # keep only observations that have non-missing values for the variable coa_grad_res
+    # this does cause us to lose some interesting universities, but doing this will eliminate some needless complications with respect to learning core concepts about statistical inference
+  filter(!is.na(coa_grad_res))
+
+# Add variable labels to the tuit+fees variables and coa variables
+  # tuition + fees variables
+    var_label(df_ipeds_pop[['tuitfee_grad_res']]) <- 'graduate, full-time, resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_grad_nres']]) <- 'graduate, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_res']]) <- 'MD, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_nres']]) <- 'MD, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_res']]) <- 'Law, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_nres']]) <- 'Law, full-time, non-resident; avg tuition + required fees'
+    
+  # COA variables
+    var_label(df_ipeds_pop[['coa_grad_res']]) <- 'graduate, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_grad_nres']]) <- 'graduate, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_res']]) <- 'MD, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_nres']]) <- 'MD, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_res']]) <- 'Law, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_nres']]) <- 'Law, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+
+df_ipeds_pop %>% glimpse()
+
+
+##########
+########## Create data frame of generated variables, with each variable meant to represent the entire population
+##########
+
+
+num_obs <- 10000
+
+# Generate normal distribution w/ custom mean and sd
+set.seed(124)
+norm_dist <- rnorm(n = num_obs, mean = 50, sd = 5)
+
+# Generate right-skewed distribution
+set.seed(124)
+rskew_dist <- rbeta(n = num_obs, shape1 = 2, shape2 = 5)
+
+# Generate left-skewed distribution
+set.seed(124)
+lskew_dist <- rbeta(n = num_obs, shape1 = 5, shape2 = 2)
+
+# Generate standard normal distribution (default is mean = 0 and sd = 1)
+set.seed(124)
+stdnorm_dist <- rnorm(n = num_obs, mean = 0, sd = 1)  # equivalent to rnorm(10)
+
+# Create dataframe
+df_generated_pop <- data.frame(norm_dist, rskew_dist, lskew_dist, stdnorm_dist)
+
+# drop individual objects associated with each variable
+rm(norm_dist,rskew_dist,lskew_dist,stdnorm_dist)
+rm(num_obs)
+
+
+##########
+########## Create sample versions of generated population data frame and IPEDS population data frame
+##########
+
+# create sample version of our generated data
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_generated_sample <- df_generated_pop %>% sample_n(size = 200)
+  df_generated_sample %>% glimpse()
+
+
+# create sample version of our ipeds data
+
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_ipeds_sample <- df_ipeds_pop %>% sample_n(size = 200) 
+  
+  # compare mean of coa_grad_res between population and sample
+  mean(df_ipeds_pop$coa_grad_res, na.rm = TRUE)
+  mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE)
+
+
+##########
+# Create function to generate plots of variable distributions
+##########
+
+plot_distribution <- function(data_vec, plot_title = '') {
+  p <- ggplot(as.data.frame(data_vec), aes(x = data_vec)) +
+    ggtitle(plot_title) + xlab('') + ylab('') +
+    geom_histogram(aes(y = ..density..), alpha = 0.4, position = 'identity') +
+    geom_density() +
+    geom_vline(aes(xintercept = mean(data_vec, na.rm = T), color = 'mean'),
+               linetype = 'dotted', size = 0.8, alpha = 0.8) +
+    geom_vline(aes(xintercept = median(data_vec, na.rm = T), color = 'median'),
+               linetype = 'dotted', size = 0.8, alpha = 0.8) +
+    scale_color_manual(name = 'Statistics',
+                       labels = c(paste('Mean:', round(mean(data_vec, na.rm = T), 2),
+                                        '\nStd Dev:', round(sd(data_vec, na.rm = T), 2)),
+                                  paste('Median:', round(median(data_vec, na.rm = T), 2))),
+                       values = c(mean = 'blue', median = 'red')) +
+    theme(plot.title = element_text(size = 10, face = 'bold', hjust = 0.5),
+          legend.title = element_text(size = 9, face = 'bold'),
+          legend.text = element_text(size = 8))
+
+  p
+}
+
+
+##########
+# Write function to get the sampling distribution from a variable (defaults equal 500 samples of size 200)
+##########
+
+get_sampling_distribution <- function(data_vec, num_samples = 1000, sample_size = 200) {
+  sample_means <- vector(mode = 'numeric', num_samples)
+
+  for (i in 1:length(sample_means)) {
+    samp <- sample(data_vec, sample_size)
+    sample_means[[i]] <- mean(samp, na.rm = T)
+  }
+
+  sample_means
+}
+
+##########
+# Write Function to generate sampling distribution (with t-test value) assuming null hypothesis is correct
+##########
+
+
+# Function to generate t-distribution plot
+plot_t_distribution <- function(data_vec, mu, alpha = 0.05, alternative = 'two.sided', plot_title = '', shade_rejection = T, shade_pval = F, stacked = F) {
+  
+  data_vec <- na.omit(data_vec)
+  
+  # Calculate t-statistics
+  sample_size <- length(data_vec)
+  deg_freedom <- sample_size - 1
+  xbar <- mean(data_vec)
+  s <- sd(data_vec)
+  
+  std_err <- s / sqrt(sample_size)
+  t <- (xbar - mu) / std_err
+  
+  # Calculate critical value and p-value
+  if (alternative == 'less') {  # left-tailed
+    cv_lower <- qt(p = alpha, df = deg_freedom, lower.tail = T)
+    cv_legend <- round(cv_lower, 2)
+    cv_legend2 <- round(cv_lower * std_err + mu, 2)
+    pval <- round(pt(q = t, df = deg_freedom, lower.tail = T), 4)
+  } else if (alternative == 'greater') {  # right-tailed
+    cv_upper <- qt(p = alpha, df = deg_freedom, lower.tail = F)
+    cv_legend <- round(cv_upper, 2)
+    cv_legend2 <- round(cv_upper * std_err + mu, 2)
+    pval <- round(pt(q = t, df = deg_freedom, lower.tail = F), 4)
+  } else {  # two-tailed
+    cv_lower <- qt(p = alpha / 2, df = deg_freedom, lower.tail = T)
+    cv_upper <- qt(p = alpha / 2, df = deg_freedom, lower.tail = F)
+    cv_legend <- str_c('\u00B1', round(cv_upper, 2))
+    cv_legend2 <- str_c(round(cv_lower * std_err + mu, 2), ' & ', round(cv_upper * std_err + mu, 2))
+    pval_half <- round(pt(q = t, df = deg_freedom, lower.tail = t < 0), 4)
+    pval <- str_c(pval_half, ' + ', pval_half, ' = ', 2 * pval_half)
+  }
+  
+  # Plot t-distribution
+  p <- ggplot(data.frame(x = -c(-4, 4)), aes(x)) +
+    ggtitle(plot_title) + xlab('') + ylab('') +
+    stat_function(fun = dt, args = list(df = deg_freedom), xlim = c(-4, 4))
+  
+  # Shade rejection region using critical value
+  if (alternative != 'greater') {
+    p <- p + geom_vline(aes(xintercept = cv_lower, color = 'cval'),
+                        linetype = 'dotted', size = 0.8, alpha = 0.8)
+    
+    if (shade_rejection) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(-4, cv_lower),
+                             geom = 'area', alpha = 0.3, fill = 'red')
+    }
+    
+    if (shade_pval) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(-4, if_else(alternative == 'two.sided', -abs(t), t)),
+                             geom = 'area', alpha = 0.3, fill = 'blue')
+    }
+  }
+  if (alternative != 'less') {
+    p <- p + geom_vline(aes(xintercept = cv_upper, color = 'cval'),
+                        linetype = 'dotted', size = 0.8, alpha = 0.8)
+    
+    if (shade_rejection) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(cv_upper, 4),
+                             geom = 'area', alpha = 0.3, fill = 'red')
+    }
+    
+    if (shade_pval) {
+      p <- p + stat_function(fun = dt, args = list(df = deg_freedom),
+                             xlim = c(if_else(alternative == 'two.sided', abs(t), t), 4),
+                             geom = 'area', alpha = 0.3, fill = 'blue')
+    }
+  }
+  
+  # Legend text
+  legend_text <- c('t-statistics / p-value', 'critical value / alpha')
+  
+  if (stacked) {
+    legend_text <- c(str_c('t-statistics: ', round(t, 2),
+                     '\n(p-value: ', str_extract(pval, '[\\d.-]+$'), ')'),
+                     str_c('Critical value: ', cv_legend,
+                     '\n(alpha: ', round(alpha, 2), ')'))
+  }
+  
+  stats_text <- c(str_c('t-statistics: ', round(t, 2)),
+                  str_c('SE: ', round(std_err, 2)),
+                  str_c('p-value: ', pval),
+                  str_c('Critical value: ', cv_legend),
+                  str_c('alpha: ', round(alpha, 2)))
+  
+  if (!stacked) {
+    p <- p +
+      annotate('text', size = 9*5/14, x = 4.84, y = 0.14, hjust = 0,
+               label = 'bold(Statistics)', parse = T) +
+      annotate('text', size = 8*5/14, x = 4.89, y = 0:4 * -0.015 + 0.12, hjust = 0,
+               label = stats_text)
+  }
+  
+  # Label plot
+  p <- p +
+    geom_vline(aes(xintercept = t, color = 'tstat'),
+               linetype = 'dotted', size = 0.8, alpha = 0.8) +
+    scale_x_continuous(sec.axis = sec_axis(trans = ~ . * std_err + mu)) +
+    scale_color_manual(name = if_else(stacked, 'Statistics', 'Legend'),
+                       breaks = c('tstat', 'cval'),
+                       labels = legend_text,
+                       values = c(tstat = 'blue', cval = 'red')) +
+    theme(plot.title = element_text(size = 10, face = 'bold', hjust = 0.5),
+          plot.margin = unit(c(5.5, if_else(stacked, 5.5, 30), 5.5, 5.5), 'pt'),
+          legend.title = element_text(size = 9, face = 'bold'),
+          legend.text = element_text(size = 8)) +
+    coord_cartesian(xlim = c(-4, 4),
+                    clip = 'off')
+
+  p
+}
+```
+
+# Central Limit Theorem - What Is It? 
+Central Limit Theorem (CLT) describes the behavior we observe on the average of a large number of independent and identically distributed random variables. It states that, regardless of the shape of the original distribution, the distribution of the sum (or average) of these variables approaches a normal (Gaussian) distribution as the sample size increases, provided that the sample size is sufficiently large. Most count n=30 or more as a "large" sample size. 
+
+A key point is the idea that as the sample size increases, the distribution of the sample mean approaches a normal distribution. This holds true regardless of the shape of the original distribution.
+
+When we start to take many, many samples, the average of the samples (also know as our sample mean) will start to look like a normal distribution. 
+
+As the sample size gets bigger or approaches infinity, we would see a frequency plot that is extremely close to a perfect normal distribution. 
+
+### Why is central limit theorem important?
+
+Central limit theorem is important when we conduct hypothesis tests about a population parameter (e.g., about a population mean, about a population regression coefficient), based on the sampling distribution of the relevant sample statistic. Even if the underlying variable of interest has a skewed population, the sampling distribution of the sample statistic (e.g., sample mean) will have a normal distribution, because of CLT. 
+
+If the sampling distribution has a normal distribution, then we know the percent of observations that are a certain number of standard deviations from the mean.
+
+```{r}
+# Show central limit theorem using a very skewed variable: non-resident, grad school cost of attendance 
+plot_distribution(df_ipeds_pop$tuitfee_grad_nres, plot_title = 'Population distribution') +
+  plot_distribution(df_ipeds_sample$tuitfee_grad_nres, plot_title = 'Single sample distribution') +
+  plot_distribution(get_sampling_distribution(df_ipeds_pop$tuitfee_grad_nres),
+                    plot_title = 'Sampling distribution') +
+  plot_layout(ncol = 1)
+```
+
+### Central limit theorem using interactive simulation
+
+- Sampling distribution simulation [LINK](https://onlinestatbook.com/stat_sim/sampling_dist/index.html)
+
+
+# Sampling distribution
+
+Sampling distribution is the distribution of the statistic that we get when a population is repeatedly sample. In other words, it describes the data chosen for a sample from the population. It is the fundamental concept of inferential statistics, and how we can understand the population parameters when we cannot necessarily measure the whole population. 
+
+Briefly, recall the goal of inferential statistics:
+
+- We want to make statements about population parameters, for example the population mean of some variable $x$, $\mu_x$
+  - But we usually cannot obtain data on the entire population
+- Therefore, we collect a representative (random) sample from the population
+- We calculate "estimates" based on this sample data. These estimates are our best guess abut the value of population parameters
+- For example, the sample mean $\bar{x}$ is our best guess of the population mean $\mu_x$
+
+Usually, we collect a single sample from the population. How do we know if the sample we collected is representative of the underlying population we want to make statements about?
+
+- This is a problem that statisticians have thought a lot about
+
+For example, for our variable `norm_dist` from the data frame `df_generated_pop`, we randomly draw `30` observations from a population of `10,000` observations
+```{r}
+set.seed(321)
+norm_dist_s1 <- sample(x = df_generated_pop$norm_dist, size = 30)
+
+mean(df_generated_pop$norm_dist)
+mean(norm_dist_s1) # mean of our sample
+```
+
+But, what if we had obtained a different random sample?
+```{r}
+set.seed(123)
+norm_dist_s1 <- sample(x = df_generated_pop$norm_dist, size = 30)
+
+mean(df_generated_pop$norm_dist)
+mean(norm_dist_s1) # mean of our sample
+
+# remove object norm_dist_s1
+rm(norm_dist_s1)
+```
+So we can see that the sample mean, $\bar{x}$, changes from sample to sample.
+
+Imagine if we take 1,000 random samples of size `n` (e.g., `30`) from a population.
+
+- For each random sample, we calculate the sample mean, and record the value of the sample mean.
+- We would have 1,000 observations, where each observation is the value of a sample mean.
+- If we plotted these 1,000 observations, it would give us a distribution of sample means.
+- More specifically, this would give us the "sampling distribution" of the sample mean.
+
+
+**Sampling distribution (of the sample mean)**
+
+- The sampling distribution of the sample mean is a relative frequency distribution where each observation is the sample mean of a single random sample from a population.
+- The sampling distribution shows how the value of the sample mean varies from sample to sample.
+
+
+**Excellent website for understanding how the sampling distribution works**
+
+- This very useful website does interactive simulations that show how the sampling distribution works [LINK](https://onlinestatbook.com/stat_sim/sampling_dist/index.html)
+  - **Please** spend 5 minutes playing around with this website; this is really the most important concept in statistics
+
+
+### The sampling distribution of any statistic
+
+- So far, we have discussed the sampling distribution of the sample mean, but a sampling distribution can be created for any sample statistic (e.g., median, min, max, regression coefficient)
+- Once we get to the unit on regression, we'll be thinking about the sampling distribution of a regression coefficient. But the underlying concepts will be exactly the same as the sampling distribution of the sample mean.
+

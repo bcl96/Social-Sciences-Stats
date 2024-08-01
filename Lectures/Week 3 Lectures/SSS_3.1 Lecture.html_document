@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.555">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Social Sciences Intro to Statistics</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="SSS_3.1 Lecture_files/libs/clipboard/clipboard.min.js"></script>
+<script src="SSS_3.1 Lecture_files/libs/quarto-html/quarto.js"></script>
+<script src="SSS_3.1 Lecture_files/libs/quarto-html/popper.min.js"></script>
+<script src="SSS_3.1 Lecture_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="SSS_3.1 Lecture_files/libs/quarto-html/anchor.min.js"></script>
+<link href="SSS_3.1 Lecture_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="SSS_3.1 Lecture_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="SSS_3.1 Lecture_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="SSS_3.1 Lecture_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="SSS_3.1 Lecture_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Social Sciences Intro to Statistics</h1>
+<p class="subtitle lead">Week 3.1 Descriptive Statistics</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Week 3: Learning goal - Identify descriptive statistics in order to describe individual variables.</p>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>Load packages:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2) </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>best_netflix <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/netflix_data/Best%20Shows%20Netflix.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="how-do-we-understand-data" class="level1">
+<h1>How do we understand data?</h1>
+<p>Before we can interpret and run statistical tests, we need to first understand our data. One way to understand our data is using descriptive statistics to describe data. We can use summary functions to find out about the mean, median, percentiles, and standard deviation of our data.</p>
+<section id="mean-median-and-percentiles" class="level3">
+<h3 class="anchored" data-anchor-id="mean-median-and-percentiles">Mean, Median, and Percentiles</h3>
+<p>Mean is the average of the dataset, the sum of all the values divided by the number of values. While the mean represents the typical value of a dataset, it is also sensitive to outliers. Outliers can drastically change the value of our mean.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(best_netflix<span class="sc">$</span>SCORE)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 8.093496</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Median on the other hand, is less sensitive to outliers. The median is the value where 50% of the dataset would be greater and 50% of the dataset would be lesser than it. To find the median, you arrange the dataset in ascending order (smallest to largest) and then find the value that is in the middle. If the dataset has an odd number of values, our median is the middle value. If the dataset has an even number of values, our median is the average of the two median values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(best_netflix<span class="sc">$</span>SCORE)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 8</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Percentiles help us visualize our dataset as 100 equal parts. The 25th percentile, also known as a the first quartile, is the value where 25% of the data would fall below. The 75th percentile, or third quartile, is the value where 75% of the data would fall below The median is the 50th percentile, it equally divides our dataset and 50% of the data would fall below. Similar to the median, because percentiles provide information on the spread of our dataset, it is less affected by outliers than compared to the mean.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Find the 25th percentile (first quartile)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>q1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(best_netflix<span class="sc">$</span>SCORE, <span class="at">probs =</span> <span class="fl">0.25</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Find the median (50th percentile)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>median <span class="ot">&lt;-</span> <span class="fu">quantile</span>(best_netflix<span class="sc">$</span>SCORE, <span class="at">probs =</span> <span class="fl">0.5</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Find the 75th percentile (third quartile)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>q3 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(best_netflix<span class="sc">$</span>SCORE, <span class="at">probs =</span> <span class="fl">0.75</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Print the results</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(q1)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 25% </span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7.7</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(median)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 50% </span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   8</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(q3)</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 75% </span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8.4</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="introduce-ipeds-data" class="level1">
+<h1>Introduce IPEDS data</h1>
+<p><strong>What is IPEDS?</strong></p>
+<ul>
+<li>IPEDS is the Integrated Postsecondary Education Data System. It is a system of interrelated surveys conducted annually by the U.S. Department of Education’s National Center for Education Statistics (NCES). IPEDS gathers information from every college, university, and technical and vocational institution that participates in the federal student financial aid programs. The Higher Education Act of 1965, as amended, requires that institutions that participate in federal student aid programs report data on enrollments, program completions, graduation rates, faculty and staff, finances, institutional prices, and student financial aid. These data are made available to students and parents through the <a href="https://nces.ed.gov/collegenavigator/">College Navigator</a> college search Web site and to researchers and others through the <a href="https://nces.ed.gov/ipeds/use-the-data">IPEDS Data Center.</a></li>
+</ul>
+<p><strong>Which IPEDS variables will we be using to teach statistical inference</strong></p>
+<ul>
+<li>Variables about annual cost of attendance for full-time graduate programs
+<ul>
+<li>average tuition (in-state vs.&nbsp;out-of-state)</li>
+<li>required fees (in-state vs.&nbsp;out-of-state)</li>
+<li>books and supplies; off-campus room and board; off-campus “other expenses”
+<ul>
+<li>these are calculated for undergraduate students, but should be highly correlated with graduate students</li>
+</ul></li>
+<li><strong>Note</strong>: none of these variables include the cost of healthcare
+<ul>
+<li>Therefore, assuming you must pay for the cost of healthcare, the measures of cost of attendance (COA) we create will understate the total cost of graduate school + life</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>Why use IPEDS data rather than <em>College Scorecard</em> data? and why these variables?</strong></p>
+<ul>
+<li><em>College Scorecard</em> brings together variables from many data sources, including IPEDS
+<ul>
+<li>The most interesting variables in <em>College Scorecard</em> are debt and earnings from degree programs, which come from Office of Federal Student Aid and IRS</li>
+</ul></li>
+<li>These university-level debt and earnings variables are measured as the mean (or median) of all students who graduated from the university
+<ul>
+<li>So the underlying data (that we don’t see) are student-level; these student-level data are aggregated to the university-level to create measures mean (or median) debt/earnings at that university</li>
+<li>Using these measures would make teaching statistical inference more confusing (e.g., trying to test hypotheses about the population mean of mean earnings)</li>
+</ul></li>
+<li>Why teach inferential statistics using IPEDS measures about graduate tuition (and cost of attendance)?
+<ul>
+<li>These measures are truly measured at the university-level</li>
+<li>Tuition and cost-of-attendance are the big drivers of student debt, so learning more about how tuition/cost-of-attendance varies across universities will help you make more informed decisions about pursuing graduate education in the future</li>
+</ul></li>
+</ul>
+<section id="some-definitions" class="level2">
+<h2 class="anchored" data-anchor-id="some-definitions">Some definitions</h2>
+<p>Some definitions related to tuition, fees, expenses, etc; from the IPEDS “Student Charges for Full Academic Year” 2022-2023 academic year data dictionary <a href="https://nces.ed.gov/ipeds/datacenter/data/IC2022_AY_Dict.zip">[LINK]</a>:</p>
+<ul>
+<li>“Full-time student” (graduate)
+<ul>
+<li>Graduate - A student enrolled for 9 or more semester credits, or 9 or more quarter credits, or students involved in thesis or dissertation preparation that are considered full time by the institution</li>
+</ul></li>
+<li>“Academic year”
+<ul>
+<li>The period of time generally extending from September to June; usually equated to 2 semesters or trimesters, 3 quarters, or the period covered by a 4-1-4 plan</li>
+</ul></li>
+<li>“Tuition”
+<ul>
+<li>Amount of money charged to students for instructional services. Tuition may be charged per term, per course, or per credit</li>
+</ul></li>
+<li>“In-state tuition”
+<ul>
+<li>The tuition charged by institutions to those students who meet the state’s or institution’s residency requirements</li>
+</ul></li>
+<li>“Out-of-state tuition”
+<ul>
+<li>The tuition charged by institutions to those students who do not meet the state’s or institution’s residency requirements</li>
+</ul></li>
+<li>“Required fees”
+<ul>
+<li>Fixed sum charged to students for items not covered by tuition and required of such a large proportion of all students that the student who does NOT pay the charge is an exception</li>
+</ul></li>
+<li>“In-state fees”
+<ul>
+<li>The fees charged by institutions to those students who meet the state’s or institution’s residency requirements.</li>
+</ul></li>
+<li>“Out-of-state fees”
+<ul>
+<li>The fees charged by institutions to those students who do not meet the state’s or institution’s residency requirements</li>
+</ul></li>
+<li>“Books and supplies” (undergraduate)
+<ul>
+<li>Do not include unusual costs for special groups of students (e.g., engineering or art majors), unless they constitute the majority of students at your institution</li>
+</ul></li>
+<li>“Room charges”
+<ul>
+<li>The charges for an academic year for rooming accommodations for a typical student sharing a room with one other student.</li>
+</ul></li>
+<li>“Board charges”
+<ul>
+<li>The charge for an academic year for meals, for a specified number of meals per week.</li>
+</ul></li>
+<li>“Other expenses”
+<ul>
+<li>The amount of money (estimated by the financial aid office) needed by a student to cover expenses such as laundry, transportation, entertainment, and furnishings. (For the purpose of this survey room and board and tuition and fees are not included.)</li>
+</ul></li>
+</ul>
+<p><em>Note</em>: the IPEDS measures of full-time graduate tuition (both in-state and out-of-state) are “average” tuition price across different graduate degree programs (excluding “first-professional” degree programs like law and medicine)</p>
+<ul>
+<li>e.g., full-time annual tuition price for an MBA program is likely higher than that of an MA in education</li>
+<li>But in the context of using these measures to teach statistical inference, pretend these prices are not “averages” but rather the official tuition price</li>
+<li>make the same assumption for variables about fees, books/supplies, living expenses, etc.</li>
+</ul>
+<p><em>Note</em>: “required fees” do not include the cost of healthcare (I think)</p>
+<p>Now let’s load the IPEDS data and create some data frames from it.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Libraries</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#install.packages('tidyverse') # if you haven't installed already</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#install.packages('labelled') # if you haven't installed already</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">#install.packages('patchwork') # if you haven't installed already</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># load tidyverse package</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(labelled) <span class="co"># load labelled package package</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="do">########## IPEDS</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Load ipeds dataset from course website</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="fu">url</span>(<span class="st">'https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/ipeds/output_data/panel_data.RData'</span>))</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ipeds data frame with fewer variables/observations</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>df_ipeds_pop <span class="ot">&lt;-</span> panel_data <span class="sc">%&gt;%</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># keep data from fall 2022</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2022</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># which universities to keep:</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2015 carnegie classification: keep research universities (15,16,17) and master's universities (18,19,20)</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(c15basic <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">15</span>,<span class="dv">16</span>,<span class="dv">17</span>,<span class="dv">18</span>,<span class="dv">19</span>,<span class="dv">20</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># which variables to keep</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(instnm,unitid,opeid6,opeid,control,c15basic,stabbr,city,zip,locale,obereg, <span class="co"># basic institutional characteristics</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>         tuition6,fee6,tuition7,fee7, <span class="co"># avg tuition and fees for full-time grad, in-state and out-of-state</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>         isprof3,ispfee3,osprof3,ospfee3, <span class="co"># avg tuition and fees for MD, in-state and out-of-state</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>         isprof9,ispfee9,osprof9,ospfee9, <span class="co"># avg tuition and fees for Law, in-state and out-of-state</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>         chg4ay3,chg7ay3,chg8ay3) <span class="sc">%&gt;%</span> <span class="co"># [undergraduate] books+supplies; off-campus (not with family) room and board; off-campus (not with family) other expenses</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># rename variables; syntax &lt;new_name&gt; = &lt;old_name&gt;</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">region =</span> obereg, <span class="co"># revion</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>         <span class="at">tuit_grad_res =</span> tuition6, <span class="at">fee_grad_res =</span> fee6, <span class="at">tuit_grad_nres =</span> tuition7, <span class="at">fee_grad_nres =</span> fee7, <span class="co"># grad</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>         <span class="at">tuit_md_res =</span> isprof3, <span class="at">fee_md_res =</span> ispfee3, <span class="at">tuit_md_nres =</span> osprof3, <span class="at">fee_md_nres =</span> ospfee3, <span class="co"># md</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>         <span class="at">tuit_law_res =</span> isprof9, <span class="at">fee_law_res =</span> ispfee9, <span class="at">tuit_law_nres =</span> osprof9, <span class="at">fee_law_nres =</span> ospfee9, <span class="co"># law</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>         <span class="at">books_supplies =</span> chg4ay3, <span class="at">roomboard_off =</span> chg7ay3, <span class="at">oth_expense_off =</span> chg8ay3) <span class="sc">%&gt;%</span> <span class="co"># [undergraduate] expenses</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>  <span class="co"># create measures of tuition+fees</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">tuitfee_grad_res =</span> tuit_grad_res <span class="sc">+</span> fee_grad_res, <span class="co"># graduate, state resident</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">tuitfee_grad_nres =</span> tuit_grad_nres <span class="sc">+</span> fee_grad_nres, <span class="co"># graduate, non-resident</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">tuitfee_md_res =</span> tuit_md_res <span class="sc">+</span> fee_md_res, <span class="co"># MD, state resident</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">tuitfee_md_nres =</span> tuit_md_nres <span class="sc">+</span> fee_md_nres, <span class="co"># MD, non-resident</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">tuitfee_law_res =</span> tuit_law_res <span class="sc">+</span> fee_law_res, <span class="co"># Law, state resident</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">tuitfee_law_nres =</span> tuit_law_nres <span class="sc">+</span> fee_law_nres) <span class="sc">%&gt;%</span> <span class="co"># Law, non-resident  </span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>  <span class="co"># create measures of cost-of-attendance (COA) as the sum of tuition, fees, book, living expenses</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">coa_grad_res =</span> tuit_grad_res <span class="sc">+</span> fee_grad_res <span class="sc">+</span> books_supplies <span class="sc">+</span> roomboard_off <span class="sc">+</span> oth_expense_off, <span class="co"># graduate, state resident</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">coa_grad_nres =</span> tuit_grad_nres <span class="sc">+</span> fee_grad_nres <span class="sc">+</span> books_supplies <span class="sc">+</span> roomboard_off <span class="sc">+</span> oth_expense_off, <span class="co"># graduate, non-resident</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">coa_md_res =</span> tuit_md_res <span class="sc">+</span> fee_md_res <span class="sc">+</span> books_supplies <span class="sc">+</span> roomboard_off <span class="sc">+</span> oth_expense_off, <span class="co"># MD, state resident</span></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">coa_md_nres =</span> tuit_md_nres <span class="sc">+</span> fee_md_nres <span class="sc">+</span> books_supplies <span class="sc">+</span> roomboard_off <span class="sc">+</span> oth_expense_off, <span class="co"># MD, non-resident</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">coa_law_res =</span> tuit_law_res <span class="sc">+</span> fee_law_res <span class="sc">+</span> books_supplies <span class="sc">+</span> roomboard_off <span class="sc">+</span> oth_expense_off, <span class="co"># Law, state resident</span></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">coa_law_nres =</span> tuit_law_nres <span class="sc">+</span> fee_law_nres <span class="sc">+</span> books_supplies <span class="sc">+</span> roomboard_off <span class="sc">+</span> oth_expense_off) <span class="sc">%&gt;%</span> <span class="co"># Law, non-resident    </span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  <span class="co"># keep only observations that have non-missing values for the variable coa_grad_res</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>    <span class="co"># this does cause us to lose some interesting universities, but doing this will eliminate some needless complications with respect to learning core concepts about statistical inference</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(coa_grad_res))</span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a><span class="co"># Add variable labels to the tuit+fees variables and coa variables</span></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>  <span class="co"># tuition + fees variables</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'tuitfee_grad_res'</span>]]) <span class="ot">&lt;-</span> <span class="st">'graduate, full-time, resident; avg tuition + required fees'</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'tuitfee_grad_nres'</span>]]) <span class="ot">&lt;-</span> <span class="st">'graduate, full-time, non-resident; avg tuition + required fees'</span></span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'tuitfee_md_res'</span>]]) <span class="ot">&lt;-</span> <span class="st">'MD, full-time, state resident; avg tuition + required fees'</span></span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'tuitfee_md_nres'</span>]]) <span class="ot">&lt;-</span> <span class="st">'MD, full-time, non-resident; avg tuition + required fees'</span></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'tuitfee_law_res'</span>]]) <span class="ot">&lt;-</span> <span class="st">'Law, full-time, state resident; avg tuition + required fees'</span></span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'tuitfee_law_nres'</span>]]) <span class="ot">&lt;-</span> <span class="st">'Law, full-time, non-resident; avg tuition + required fees'</span></span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>  <span class="co"># COA variables</span></span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'coa_grad_res'</span>]]) <span class="ot">&lt;-</span> <span class="st">'graduate, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'</span></span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'coa_grad_nres'</span>]]) <span class="ot">&lt;-</span> <span class="st">'graduate, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'</span></span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'coa_md_res'</span>]]) <span class="ot">&lt;-</span> <span class="st">'MD, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'</span></span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'coa_md_nres'</span>]]) <span class="ot">&lt;-</span> <span class="st">'MD, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'</span></span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'coa_law_res'</span>]]) <span class="ot">&lt;-</span> <span class="st">'Law, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'</span></span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>    <span class="fu">var_label</span>(df_ipeds_pop[[<span class="st">'coa_law_nres'</span>]]) <span class="ot">&lt;-</span> <span class="st">'Law, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'</span></span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>df_ipeds_pop <span class="sc">%&gt;%</span> <span class="fu">glimpse</span>()</span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Rows: 965</span></span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Columns: 38</span></span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ instnm            &lt;chr&gt; "Alabama A &amp; M University", "University of Alabama a…</span></span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ unitid            &lt;dbl&gt; 100654, 100663, 100706, 100724, 100751, 100830, 1008…</span></span>
+<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ opeid6            &lt;chr&gt; "001002", "001052", "001055", "001005", "001051", "0…</span></span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ opeid             &lt;chr&gt; "00100200", "00105200", "00105500", "00100500", "001…</span></span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ control           &lt;dbl+lbl&gt; 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 2, …</span></span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ c15basic          &lt;dbl+lbl&gt; 18, 15, 16, 19, 16, 18, 16, 20, 18, 18, 19, 18, …</span></span>
+<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ stabbr            &lt;chr+lbl&gt; "AL", "AL", "AL", "AL", "AL", "AL", "AL", "AL", …</span></span>
+<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ city              &lt;chr&gt; "Normal", "Birmingham", "Huntsville", "Montgomery", …</span></span>
+<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ zip               &lt;chr&gt; "35762", "35294-0110", "35899", "36104-0271", "35487…</span></span>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ locale            &lt;dbl+lbl&gt; 12, 12, 12, 12, 13, 12, 13, 12, 23, 43, 21, 13, …</span></span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ region            &lt;dbl+lbl&gt; 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, …</span></span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuit_grad_res     &lt;dbl&gt; 10128, 8424, 10632, 7416, 11100, 7812, 10386, 15325,…</span></span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ fee_grad_res      &lt;dbl&gt; 1414, 0, 1054, 2740, 690, 766, 1784, 900, 1000, 190,…</span></span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuit_grad_nres    &lt;dbl&gt; 20160, 19962, 24430, 14832, 31460, 17550, 31158, 153…</span></span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ fee_grad_nres     &lt;dbl&gt; 1414, 0, 1054, 2740, 690, 766, 1784, 900, 1000, 190,…</span></span>
+<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuit_md_res       &lt;dbl&gt; NA, 31198, NA, NA, 31198, NA, NA, NA, NA, NA, NA, NA…</span></span>
+<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ fee_md_res        &lt;dbl&gt; NA, 3464, NA, NA, 0, NA, NA, NA, NA, NA, NA, NA, NA,…</span></span>
+<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuit_md_nres      &lt;dbl&gt; NA, 62714, NA, NA, 62714, NA, NA, NA, NA, NA, NA, NA…</span></span>
+<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ fee_md_nres       &lt;dbl&gt; NA, 3464, NA, NA, 0, NA, NA, NA, NA, NA, NA, NA, NA,…</span></span>
+<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuit_law_res      &lt;dbl&gt; NA, NA, NA, NA, 24080, NA, NA, 39000, NA, NA, NA, NA…</span></span>
+<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ fee_law_res       &lt;dbl&gt; NA, NA, NA, NA, 300, NA, NA, 325, NA, NA, NA, NA, 65…</span></span>
+<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuit_law_nres     &lt;dbl&gt; NA, NA, NA, NA, 44470, NA, NA, 39000, NA, NA, NA, NA…</span></span>
+<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ fee_law_nres      &lt;dbl&gt; NA, NA, NA, NA, 300, NA, NA, 325, NA, NA, NA, NA, 65…</span></span>
+<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ books_supplies    &lt;dbl&gt; 1600, 1200, 2416, 1600, 800, 1200, 1200, 1800, 998, …</span></span>
+<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ roomboard_off     &lt;dbl&gt; 9520, 14330, 11122, 7320, 14426, 10485, 14998, 8020,…</span></span>
+<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ oth_expense_off   &lt;dbl&gt; 3090, 6007, 4462, 5130, 4858, 4030, 6028, 4600, 3318…</span></span>
+<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuitfee_grad_res  &lt;dbl&gt; 11542, 8424, 11686, 10156, 11790, 8578, 12170, 16225…</span></span>
+<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuitfee_grad_nres &lt;dbl&gt; 21574, 19962, 25484, 17572, 32150, 18316, 32942, 162…</span></span>
+<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuitfee_md_res    &lt;dbl&gt; NA, 34662, NA, NA, 31198, NA, NA, NA, NA, NA, NA, NA…</span></span>
+<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuitfee_md_nres   &lt;dbl&gt; NA, 66178, NA, NA, 62714, NA, NA, NA, NA, NA, NA, NA…</span></span>
+<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuitfee_law_res   &lt;dbl&gt; NA, NA, NA, NA, 24380, NA, NA, 39325, NA, NA, NA, NA…</span></span>
+<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ tuitfee_law_nres  &lt;dbl&gt; NA, NA, NA, NA, 44770, NA, NA, 39325, NA, NA, NA, NA…</span></span>
+<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ coa_grad_res      &lt;dbl&gt; 25752, 29961, 29686, 24206, 31874, 24293, 34396, 306…</span></span>
+<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ coa_grad_nres     &lt;dbl&gt; 35784, 41499, 43484, 31622, 52234, 34031, 55168, 306…</span></span>
+<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ coa_md_res        &lt;dbl&gt; NA, 56199, NA, NA, 51282, NA, NA, NA, NA, NA, NA, NA…</span></span>
+<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ coa_md_nres       &lt;dbl&gt; NA, 87715, NA, NA, 82798, NA, NA, NA, NA, NA, NA, NA…</span></span>
+<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ coa_law_res       &lt;dbl&gt; NA, NA, NA, NA, 44464, NA, NA, 53745, NA, NA, NA, NA…</span></span>
+<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ coa_law_nres      &lt;dbl&gt; NA, NA, NA, NA, 64854, NA, NA, 53745, NA, NA, NA, NA…</span></span>
+<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a><span class="do">########## Create data frame of generated variables, with each variable meant to represent the entire population</span></span>
+<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>num_obs <span class="ot">&lt;-</span> <span class="dv">10000</span></span>
+<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate normal distribution w/ custom mean and sd</span></span>
+<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">124</span>)</span>
+<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a>norm_dist <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="at">n =</span> num_obs, <span class="at">mean =</span> <span class="dv">50</span>, <span class="at">sd =</span> <span class="dv">5</span>)</span>
+<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate right-skewed distribution</span></span>
+<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">124</span>)</span>
+<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>rskew_dist <span class="ot">&lt;-</span> <span class="fu">rbeta</span>(<span class="at">n =</span> num_obs, <span class="at">shape1 =</span> <span class="dv">2</span>, <span class="at">shape2 =</span> <span class="dv">5</span>)</span>
+<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate left-skewed distribution</span></span>
+<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">124</span>)</span>
+<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a>lskew_dist <span class="ot">&lt;-</span> <span class="fu">rbeta</span>(<span class="at">n =</span> num_obs, <span class="at">shape1 =</span> <span class="dv">5</span>, <span class="at">shape2 =</span> <span class="dv">2</span>)</span>
+<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate standard normal distribution (default is mean = 0 and sd = 1)</span></span>
+<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">124</span>)</span>
+<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a>stdnorm_dist <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="at">n =</span> num_obs, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>)  <span class="co"># equivalent to rnorm(10)</span></span>
+<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a><span class="co"># Create dataframe</span></span>
+<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>df_generated_pop <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(norm_dist, rskew_dist, lskew_dist, stdnorm_dist)</span>
+<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a><span class="co"># drop individual objects associated with each variable</span></span>
+<span id="cb5-144"><a href="#cb5-144" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(norm_dist,rskew_dist,lskew_dist,stdnorm_dist)</span>
+<span id="cb5-145"><a href="#cb5-145" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(num_obs)</span>
+<span id="cb5-146"><a href="#cb5-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-147"><a href="#cb5-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-148"><a href="#cb5-148" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-149"><a href="#cb5-149" aria-hidden="true" tabindex="-1"></a><span class="do">########## Create sample versions of generated population data frame and IPEDS population data frame</span></span>
+<span id="cb5-150"><a href="#cb5-150" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-151"><a href="#cb5-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-152"><a href="#cb5-152" aria-hidden="true" tabindex="-1"></a><span class="co"># create sample version of our generated data</span></span>
+<span id="cb5-153"><a href="#cb5-153" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">124</span>) <span class="co"># set seed so that everyone ends up with the same random sample</span></span>
+<span id="cb5-154"><a href="#cb5-154" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-155"><a href="#cb5-155" aria-hidden="true" tabindex="-1"></a>  df_generated_sample <span class="ot">&lt;-</span> df_generated_pop <span class="sc">%&gt;%</span> <span class="fu">sample_n</span>(<span class="at">size =</span> <span class="dv">200</span>)</span>
+<span id="cb5-156"><a href="#cb5-156" aria-hidden="true" tabindex="-1"></a>  df_generated_sample <span class="sc">%&gt;%</span> <span class="fu">glimpse</span>()</span>
+<span id="cb5-157"><a href="#cb5-157" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Rows: 200</span></span>
+<span id="cb5-158"><a href="#cb5-158" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Columns: 4</span></span>
+<span id="cb5-159"><a href="#cb5-159" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ norm_dist    &lt;dbl&gt; 42.70513, 50.24400, 61.29008, 45.47494, 44.74406, 47.9912…</span></span>
+<span id="cb5-160"><a href="#cb5-160" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ rskew_dist   &lt;dbl&gt; 0.34451771, 0.31359906, 0.09375337, 0.05581678, 0.0744584…</span></span>
+<span id="cb5-161"><a href="#cb5-161" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ lskew_dist   &lt;dbl&gt; 0.6554823, 0.6864009, 0.9062466, 0.9441832, 0.9255415, 0.…</span></span>
+<span id="cb5-162"><a href="#cb5-162" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ stdnorm_dist &lt;dbl&gt; -1.45897348, 0.04880097, 2.25801577, -0.90501164, -1.0511…</span></span>
+<span id="cb5-163"><a href="#cb5-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-165"><a href="#cb5-165" aria-hidden="true" tabindex="-1"></a><span class="co"># create sample version of our ipeds data</span></span>
+<span id="cb5-166"><a href="#cb5-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">124</span>) <span class="co"># set seed so that everyone ends up with the same random sample</span></span>
+<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-169"><a href="#cb5-169" aria-hidden="true" tabindex="-1"></a>  df_ipeds_sample <span class="ot">&lt;-</span> df_ipeds_pop <span class="sc">%&gt;%</span> <span class="fu">sample_n</span>(<span class="at">size =</span> <span class="dv">200</span>) </span>
+<span id="cb5-170"><a href="#cb5-170" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-171"><a href="#cb5-171" aria-hidden="true" tabindex="-1"></a>  <span class="co"># compare mean of coa_grad_res between population and sample</span></span>
+<span id="cb5-172"><a href="#cb5-172" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(df_ipeds_pop<span class="sc">$</span>coa_grad_res, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-173"><a href="#cb5-173" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 32528.35</span></span>
+<span id="cb5-174"><a href="#cb5-174" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(df_ipeds_sample<span class="sc">$</span>coa_grad_res, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-175"><a href="#cb5-175" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 31620.8</span></span>
+<span id="cb5-176"><a href="#cb5-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-177"><a href="#cb5-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-178"><a href="#cb5-178" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-179"><a href="#cb5-179" aria-hidden="true" tabindex="-1"></a><span class="co"># Create function to generate plots of variable distributions</span></span>
+<span id="cb5-180"><a href="#cb5-180" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-181"><a href="#cb5-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-182"><a href="#cb5-182" aria-hidden="true" tabindex="-1"></a>plot_distribution <span class="ot">&lt;-</span> <span class="cf">function</span>(data_vec, <span class="at">plot_title =</span> <span class="st">''</span>) {</span>
+<span id="cb5-183"><a href="#cb5-183" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">as.data.frame</span>(data_vec), <span class="fu">aes</span>(<span class="at">x =</span> data_vec)) <span class="sc">+</span></span>
+<span id="cb5-184"><a href="#cb5-184" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(plot_title) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">''</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">''</span>) <span class="sc">+</span></span>
+<span id="cb5-185"><a href="#cb5-185" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_histogram</span>(<span class="fu">aes</span>(<span class="at">y =</span> ..density..), <span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">position =</span> <span class="st">'identity'</span>) <span class="sc">+</span></span>
+<span id="cb5-186"><a href="#cb5-186" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>() <span class="sc">+</span></span>
+<span id="cb5-187"><a href="#cb5-187" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(data_vec, <span class="at">na.rm =</span> T), <span class="at">color =</span> <span class="st">'mean'</span>),</span>
+<span id="cb5-188"><a href="#cb5-188" aria-hidden="true" tabindex="-1"></a>               <span class="at">linetype =</span> <span class="st">'dotted'</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb5-189"><a href="#cb5-189" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="fu">median</span>(data_vec, <span class="at">na.rm =</span> T), <span class="at">color =</span> <span class="st">'median'</span>),</span>
+<span id="cb5-190"><a href="#cb5-190" aria-hidden="true" tabindex="-1"></a>               <span class="at">linetype =</span> <span class="st">'dotted'</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb5-191"><a href="#cb5-191" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_color_manual</span>(<span class="at">name =</span> <span class="st">'Statistics'</span>,</span>
+<span id="cb5-192"><a href="#cb5-192" aria-hidden="true" tabindex="-1"></a>                       <span class="at">labels =</span> <span class="fu">c</span>(<span class="fu">paste</span>(<span class="st">'Mean:'</span>, <span class="fu">round</span>(<span class="fu">mean</span>(data_vec, <span class="at">na.rm =</span> T), <span class="dv">2</span>),</span>
+<span id="cb5-193"><a href="#cb5-193" aria-hidden="true" tabindex="-1"></a>                                        <span class="st">'</span><span class="sc">\n</span><span class="st">Std Dev:'</span>, <span class="fu">round</span>(<span class="fu">sd</span>(data_vec, <span class="at">na.rm =</span> T), <span class="dv">2</span>)),</span>
+<span id="cb5-194"><a href="#cb5-194" aria-hidden="true" tabindex="-1"></a>                                  <span class="fu">paste</span>(<span class="st">'Median:'</span>, <span class="fu">round</span>(<span class="fu">median</span>(data_vec, <span class="at">na.rm =</span> T), <span class="dv">2</span>))),</span>
+<span id="cb5-195"><a href="#cb5-195" aria-hidden="true" tabindex="-1"></a>                       <span class="at">values =</span> <span class="fu">c</span>(<span class="at">mean =</span> <span class="st">'blue'</span>, <span class="at">median =</span> <span class="st">'red'</span>)) <span class="sc">+</span></span>
+<span id="cb5-196"><a href="#cb5-196" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>, <span class="at">face =</span> <span class="st">'bold'</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb5-197"><a href="#cb5-197" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>, <span class="at">face =</span> <span class="st">'bold'</span>),</span>
+<span id="cb5-198"><a href="#cb5-198" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>))</span>
+<span id="cb5-199"><a href="#cb5-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-200"><a href="#cb5-200" aria-hidden="true" tabindex="-1"></a>  p</span>
+<span id="cb5-201"><a href="#cb5-201" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-202"><a href="#cb5-202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-203"><a href="#cb5-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-204"><a href="#cb5-204" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-205"><a href="#cb5-205" aria-hidden="true" tabindex="-1"></a><span class="co"># Write function to get the sampling distribution from a variable (defaults equal 500 samples of size 200)</span></span>
+<span id="cb5-206"><a href="#cb5-206" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-207"><a href="#cb5-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-208"><a href="#cb5-208" aria-hidden="true" tabindex="-1"></a>get_sampling_distribution <span class="ot">&lt;-</span> <span class="cf">function</span>(data_vec, <span class="at">num_samples =</span> <span class="dv">1000</span>, <span class="at">sample_size =</span> <span class="dv">200</span>) {</span>
+<span id="cb5-209"><a href="#cb5-209" aria-hidden="true" tabindex="-1"></a>  sample_means <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="at">mode =</span> <span class="st">'numeric'</span>, num_samples)</span>
+<span id="cb5-210"><a href="#cb5-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-211"><a href="#cb5-211" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(sample_means)) {</span>
+<span id="cb5-212"><a href="#cb5-212" aria-hidden="true" tabindex="-1"></a>    samp <span class="ot">&lt;-</span> <span class="fu">sample</span>(data_vec, sample_size)</span>
+<span id="cb5-213"><a href="#cb5-213" aria-hidden="true" tabindex="-1"></a>    sample_means[[i]] <span class="ot">&lt;-</span> <span class="fu">mean</span>(samp, <span class="at">na.rm =</span> T)</span>
+<span id="cb5-214"><a href="#cb5-214" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-215"><a href="#cb5-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-216"><a href="#cb5-216" aria-hidden="true" tabindex="-1"></a>  sample_means</span>
+<span id="cb5-217"><a href="#cb5-217" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-218"><a href="#cb5-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-219"><a href="#cb5-219" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-220"><a href="#cb5-220" aria-hidden="true" tabindex="-1"></a><span class="co"># Write Function to generate sampling distribution (with t-test value) assuming null hypothesis is correct</span></span>
+<span id="cb5-221"><a href="#cb5-221" aria-hidden="true" tabindex="-1"></a><span class="do">##########</span></span>
+<span id="cb5-222"><a href="#cb5-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-223"><a href="#cb5-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-224"><a href="#cb5-224" aria-hidden="true" tabindex="-1"></a><span class="co"># Function to generate t-distribution plot</span></span>
+<span id="cb5-225"><a href="#cb5-225" aria-hidden="true" tabindex="-1"></a>plot_t_distribution <span class="ot">&lt;-</span> <span class="cf">function</span>(data_vec, mu, <span class="at">alpha =</span> <span class="fl">0.05</span>, <span class="at">alternative =</span> <span class="st">'two.sided'</span>, <span class="at">plot_title =</span> <span class="st">''</span>, <span class="at">shade_rejection =</span> T, <span class="at">shade_pval =</span> F, <span class="at">stacked =</span> F) {</span>
+<span id="cb5-226"><a href="#cb5-226" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-227"><a href="#cb5-227" aria-hidden="true" tabindex="-1"></a>  data_vec <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(data_vec)</span>
+<span id="cb5-228"><a href="#cb5-228" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-229"><a href="#cb5-229" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate t-statistics</span></span>
+<span id="cb5-230"><a href="#cb5-230" aria-hidden="true" tabindex="-1"></a>  sample_size <span class="ot">&lt;-</span> <span class="fu">length</span>(data_vec)</span>
+<span id="cb5-231"><a href="#cb5-231" aria-hidden="true" tabindex="-1"></a>  deg_freedom <span class="ot">&lt;-</span> sample_size <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb5-232"><a href="#cb5-232" aria-hidden="true" tabindex="-1"></a>  xbar <span class="ot">&lt;-</span> <span class="fu">mean</span>(data_vec)</span>
+<span id="cb5-233"><a href="#cb5-233" aria-hidden="true" tabindex="-1"></a>  s <span class="ot">&lt;-</span> <span class="fu">sd</span>(data_vec)</span>
+<span id="cb5-234"><a href="#cb5-234" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-235"><a href="#cb5-235" aria-hidden="true" tabindex="-1"></a>  std_err <span class="ot">&lt;-</span> s <span class="sc">/</span> <span class="fu">sqrt</span>(sample_size)</span>
+<span id="cb5-236"><a href="#cb5-236" aria-hidden="true" tabindex="-1"></a>  t <span class="ot">&lt;-</span> (xbar <span class="sc">-</span> mu) <span class="sc">/</span> std_err</span>
+<span id="cb5-237"><a href="#cb5-237" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-238"><a href="#cb5-238" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate critical value and p-value</span></span>
+<span id="cb5-239"><a href="#cb5-239" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (alternative <span class="sc">==</span> <span class="st">'less'</span>) {  <span class="co"># left-tailed</span></span>
+<span id="cb5-240"><a href="#cb5-240" aria-hidden="true" tabindex="-1"></a>    cv_lower <span class="ot">&lt;-</span> <span class="fu">qt</span>(<span class="at">p =</span> alpha, <span class="at">df =</span> deg_freedom, <span class="at">lower.tail =</span> T)</span>
+<span id="cb5-241"><a href="#cb5-241" aria-hidden="true" tabindex="-1"></a>    cv_legend <span class="ot">&lt;-</span> <span class="fu">round</span>(cv_lower, <span class="dv">2</span>)</span>
+<span id="cb5-242"><a href="#cb5-242" aria-hidden="true" tabindex="-1"></a>    cv_legend2 <span class="ot">&lt;-</span> <span class="fu">round</span>(cv_lower <span class="sc">*</span> std_err <span class="sc">+</span> mu, <span class="dv">2</span>)</span>
+<span id="cb5-243"><a href="#cb5-243" aria-hidden="true" tabindex="-1"></a>    pval <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">pt</span>(<span class="at">q =</span> t, <span class="at">df =</span> deg_freedom, <span class="at">lower.tail =</span> T), <span class="dv">4</span>)</span>
+<span id="cb5-244"><a href="#cb5-244" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (alternative <span class="sc">==</span> <span class="st">'greater'</span>) {  <span class="co"># right-tailed</span></span>
+<span id="cb5-245"><a href="#cb5-245" aria-hidden="true" tabindex="-1"></a>    cv_upper <span class="ot">&lt;-</span> <span class="fu">qt</span>(<span class="at">p =</span> alpha, <span class="at">df =</span> deg_freedom, <span class="at">lower.tail =</span> F)</span>
+<span id="cb5-246"><a href="#cb5-246" aria-hidden="true" tabindex="-1"></a>    cv_legend <span class="ot">&lt;-</span> <span class="fu">round</span>(cv_upper, <span class="dv">2</span>)</span>
+<span id="cb5-247"><a href="#cb5-247" aria-hidden="true" tabindex="-1"></a>    cv_legend2 <span class="ot">&lt;-</span> <span class="fu">round</span>(cv_upper <span class="sc">*</span> std_err <span class="sc">+</span> mu, <span class="dv">2</span>)</span>
+<span id="cb5-248"><a href="#cb5-248" aria-hidden="true" tabindex="-1"></a>    pval <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">pt</span>(<span class="at">q =</span> t, <span class="at">df =</span> deg_freedom, <span class="at">lower.tail =</span> F), <span class="dv">4</span>)</span>
+<span id="cb5-249"><a href="#cb5-249" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {  <span class="co"># two-tailed</span></span>
+<span id="cb5-250"><a href="#cb5-250" aria-hidden="true" tabindex="-1"></a>    cv_lower <span class="ot">&lt;-</span> <span class="fu">qt</span>(<span class="at">p =</span> alpha <span class="sc">/</span> <span class="dv">2</span>, <span class="at">df =</span> deg_freedom, <span class="at">lower.tail =</span> T)</span>
+<span id="cb5-251"><a href="#cb5-251" aria-hidden="true" tabindex="-1"></a>    cv_upper <span class="ot">&lt;-</span> <span class="fu">qt</span>(<span class="at">p =</span> alpha <span class="sc">/</span> <span class="dv">2</span>, <span class="at">df =</span> deg_freedom, <span class="at">lower.tail =</span> F)</span>
+<span id="cb5-252"><a href="#cb5-252" aria-hidden="true" tabindex="-1"></a>    cv_legend <span class="ot">&lt;-</span> <span class="fu">str_c</span>(<span class="st">'\u00B1'</span>, <span class="fu">round</span>(cv_upper, <span class="dv">2</span>))</span>
+<span id="cb5-253"><a href="#cb5-253" aria-hidden="true" tabindex="-1"></a>    cv_legend2 <span class="ot">&lt;-</span> <span class="fu">str_c</span>(<span class="fu">round</span>(cv_lower <span class="sc">*</span> std_err <span class="sc">+</span> mu, <span class="dv">2</span>), <span class="st">' &amp; '</span>, <span class="fu">round</span>(cv_upper <span class="sc">*</span> std_err <span class="sc">+</span> mu, <span class="dv">2</span>))</span>
+<span id="cb5-254"><a href="#cb5-254" aria-hidden="true" tabindex="-1"></a>    pval_half <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">pt</span>(<span class="at">q =</span> t, <span class="at">df =</span> deg_freedom, <span class="at">lower.tail =</span> t <span class="sc">&lt;</span> <span class="dv">0</span>), <span class="dv">4</span>)</span>
+<span id="cb5-255"><a href="#cb5-255" aria-hidden="true" tabindex="-1"></a>    pval <span class="ot">&lt;-</span> <span class="fu">str_c</span>(pval_half, <span class="st">' + '</span>, pval_half, <span class="st">' = '</span>, <span class="dv">2</span> <span class="sc">*</span> pval_half)</span>
+<span id="cb5-256"><a href="#cb5-256" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-257"><a href="#cb5-257" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-258"><a href="#cb5-258" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plot t-distribution</span></span>
+<span id="cb5-259"><a href="#cb5-259" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">x =</span> <span class="sc">-</span><span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>)), <span class="fu">aes</span>(x)) <span class="sc">+</span></span>
+<span id="cb5-260"><a href="#cb5-260" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(plot_title) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">''</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">''</span>) <span class="sc">+</span></span>
+<span id="cb5-261"><a href="#cb5-261" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stat_function</span>(<span class="at">fun =</span> dt, <span class="at">args =</span> <span class="fu">list</span>(<span class="at">df =</span> deg_freedom), <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>))</span>
+<span id="cb5-262"><a href="#cb5-262" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-263"><a href="#cb5-263" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Shade rejection region using critical value</span></span>
+<span id="cb5-264"><a href="#cb5-264" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (alternative <span class="sc">!=</span> <span class="st">'greater'</span>) {</span>
+<span id="cb5-265"><a href="#cb5-265" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> cv_lower, <span class="at">color =</span> <span class="st">'cval'</span>),</span>
+<span id="cb5-266"><a href="#cb5-266" aria-hidden="true" tabindex="-1"></a>                        <span class="at">linetype =</span> <span class="st">'dotted'</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>)</span>
+<span id="cb5-267"><a href="#cb5-267" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-268"><a href="#cb5-268" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (shade_rejection) {</span>
+<span id="cb5-269"><a href="#cb5-269" aria-hidden="true" tabindex="-1"></a>      p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">stat_function</span>(<span class="at">fun =</span> dt, <span class="at">args =</span> <span class="fu">list</span>(<span class="at">df =</span> deg_freedom),</span>
+<span id="cb5-270"><a href="#cb5-270" aria-hidden="true" tabindex="-1"></a>                             <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, cv_lower),</span>
+<span id="cb5-271"><a href="#cb5-271" aria-hidden="true" tabindex="-1"></a>                             <span class="at">geom =</span> <span class="st">'area'</span>, <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">fill =</span> <span class="st">'red'</span>)</span>
+<span id="cb5-272"><a href="#cb5-272" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-273"><a href="#cb5-273" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-274"><a href="#cb5-274" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (shade_pval) {</span>
+<span id="cb5-275"><a href="#cb5-275" aria-hidden="true" tabindex="-1"></a>      p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">stat_function</span>(<span class="at">fun =</span> dt, <span class="at">args =</span> <span class="fu">list</span>(<span class="at">df =</span> deg_freedom),</span>
+<span id="cb5-276"><a href="#cb5-276" aria-hidden="true" tabindex="-1"></a>                             <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="fu">if_else</span>(alternative <span class="sc">==</span> <span class="st">'two.sided'</span>, <span class="sc">-</span><span class="fu">abs</span>(t), t)),</span>
+<span id="cb5-277"><a href="#cb5-277" aria-hidden="true" tabindex="-1"></a>                             <span class="at">geom =</span> <span class="st">'area'</span>, <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">fill =</span> <span class="st">'blue'</span>)</span>
+<span id="cb5-278"><a href="#cb5-278" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-279"><a href="#cb5-279" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-280"><a href="#cb5-280" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (alternative <span class="sc">!=</span> <span class="st">'less'</span>) {</span>
+<span id="cb5-281"><a href="#cb5-281" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> cv_upper, <span class="at">color =</span> <span class="st">'cval'</span>),</span>
+<span id="cb5-282"><a href="#cb5-282" aria-hidden="true" tabindex="-1"></a>                        <span class="at">linetype =</span> <span class="st">'dotted'</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>)</span>
+<span id="cb5-283"><a href="#cb5-283" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-284"><a href="#cb5-284" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (shade_rejection) {</span>
+<span id="cb5-285"><a href="#cb5-285" aria-hidden="true" tabindex="-1"></a>      p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">stat_function</span>(<span class="at">fun =</span> dt, <span class="at">args =</span> <span class="fu">list</span>(<span class="at">df =</span> deg_freedom),</span>
+<span id="cb5-286"><a href="#cb5-286" aria-hidden="true" tabindex="-1"></a>                             <span class="at">xlim =</span> <span class="fu">c</span>(cv_upper, <span class="dv">4</span>),</span>
+<span id="cb5-287"><a href="#cb5-287" aria-hidden="true" tabindex="-1"></a>                             <span class="at">geom =</span> <span class="st">'area'</span>, <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">fill =</span> <span class="st">'red'</span>)</span>
+<span id="cb5-288"><a href="#cb5-288" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-289"><a href="#cb5-289" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-290"><a href="#cb5-290" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (shade_pval) {</span>
+<span id="cb5-291"><a href="#cb5-291" aria-hidden="true" tabindex="-1"></a>      p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">stat_function</span>(<span class="at">fun =</span> dt, <span class="at">args =</span> <span class="fu">list</span>(<span class="at">df =</span> deg_freedom),</span>
+<span id="cb5-292"><a href="#cb5-292" aria-hidden="true" tabindex="-1"></a>                             <span class="at">xlim =</span> <span class="fu">c</span>(<span class="fu">if_else</span>(alternative <span class="sc">==</span> <span class="st">'two.sided'</span>, <span class="fu">abs</span>(t), t), <span class="dv">4</span>),</span>
+<span id="cb5-293"><a href="#cb5-293" aria-hidden="true" tabindex="-1"></a>                             <span class="at">geom =</span> <span class="st">'area'</span>, <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">fill =</span> <span class="st">'blue'</span>)</span>
+<span id="cb5-294"><a href="#cb5-294" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-295"><a href="#cb5-295" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-296"><a href="#cb5-296" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-297"><a href="#cb5-297" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Legend text</span></span>
+<span id="cb5-298"><a href="#cb5-298" aria-hidden="true" tabindex="-1"></a>  legend_text <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">'t-statistics / p-value'</span>, <span class="st">'critical value / alpha'</span>)</span>
+<span id="cb5-299"><a href="#cb5-299" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-300"><a href="#cb5-300" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (stacked) {</span>
+<span id="cb5-301"><a href="#cb5-301" aria-hidden="true" tabindex="-1"></a>    legend_text <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">str_c</span>(<span class="st">'t-statistics: '</span>, <span class="fu">round</span>(t, <span class="dv">2</span>),</span>
+<span id="cb5-302"><a href="#cb5-302" aria-hidden="true" tabindex="-1"></a>                     <span class="st">'</span><span class="sc">\n</span><span class="st">(p-value: '</span>, <span class="fu">str_extract</span>(pval, <span class="st">'[</span><span class="sc">\\</span><span class="st">d.-]+$'</span>), <span class="st">')'</span>),</span>
+<span id="cb5-303"><a href="#cb5-303" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">str_c</span>(<span class="st">'Critical value: '</span>, cv_legend,</span>
+<span id="cb5-304"><a href="#cb5-304" aria-hidden="true" tabindex="-1"></a>                     <span class="st">'</span><span class="sc">\n</span><span class="st">(alpha: '</span>, <span class="fu">round</span>(alpha, <span class="dv">2</span>), <span class="st">')'</span>))</span>
+<span id="cb5-305"><a href="#cb5-305" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-306"><a href="#cb5-306" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-307"><a href="#cb5-307" aria-hidden="true" tabindex="-1"></a>  stats_text <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">str_c</span>(<span class="st">'t-statistics: '</span>, <span class="fu">round</span>(t, <span class="dv">2</span>)),</span>
+<span id="cb5-308"><a href="#cb5-308" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">str_c</span>(<span class="st">'SE: '</span>, <span class="fu">round</span>(std_err, <span class="dv">2</span>)),</span>
+<span id="cb5-309"><a href="#cb5-309" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">str_c</span>(<span class="st">'p-value: '</span>, pval),</span>
+<span id="cb5-310"><a href="#cb5-310" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">str_c</span>(<span class="st">'Critical value: '</span>, cv_legend),</span>
+<span id="cb5-311"><a href="#cb5-311" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">str_c</span>(<span class="st">'alpha: '</span>, <span class="fu">round</span>(alpha, <span class="dv">2</span>)))</span>
+<span id="cb5-312"><a href="#cb5-312" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-313"><a href="#cb5-313" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>stacked) {</span>
+<span id="cb5-314"><a href="#cb5-314" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">&lt;-</span> p <span class="sc">+</span></span>
+<span id="cb5-315"><a href="#cb5-315" aria-hidden="true" tabindex="-1"></a>      <span class="fu">annotate</span>(<span class="st">'text'</span>, <span class="at">size =</span> <span class="dv">9</span><span class="sc">*</span><span class="dv">5</span><span class="sc">/</span><span class="dv">14</span>, <span class="at">x =</span> <span class="fl">4.84</span>, <span class="at">y =</span> <span class="fl">0.14</span>, <span class="at">hjust =</span> <span class="dv">0</span>,</span>
+<span id="cb5-316"><a href="#cb5-316" aria-hidden="true" tabindex="-1"></a>               <span class="at">label =</span> <span class="st">'bold(Statistics)'</span>, <span class="at">parse =</span> T) <span class="sc">+</span></span>
+<span id="cb5-317"><a href="#cb5-317" aria-hidden="true" tabindex="-1"></a>      <span class="fu">annotate</span>(<span class="st">'text'</span>, <span class="at">size =</span> <span class="dv">8</span><span class="sc">*</span><span class="dv">5</span><span class="sc">/</span><span class="dv">14</span>, <span class="at">x =</span> <span class="fl">4.89</span>, <span class="at">y =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">4</span> <span class="sc">*</span> <span class="sc">-</span><span class="fl">0.015</span> <span class="sc">+</span> <span class="fl">0.12</span>, <span class="at">hjust =</span> <span class="dv">0</span>,</span>
+<span id="cb5-318"><a href="#cb5-318" aria-hidden="true" tabindex="-1"></a>               <span class="at">label =</span> stats_text)</span>
+<span id="cb5-319"><a href="#cb5-319" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-320"><a href="#cb5-320" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-321"><a href="#cb5-321" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Label plot</span></span>
+<span id="cb5-322"><a href="#cb5-322" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> p <span class="sc">+</span></span>
+<span id="cb5-323"><a href="#cb5-323" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> t, <span class="at">color =</span> <span class="st">'tstat'</span>),</span>
+<span id="cb5-324"><a href="#cb5-324" aria-hidden="true" tabindex="-1"></a>               <span class="at">linetype =</span> <span class="st">'dotted'</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb5-325"><a href="#cb5-325" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">sec.axis =</span> <span class="fu">sec_axis</span>(<span class="at">trans =</span> <span class="sc">~</span> . <span class="sc">*</span> std_err <span class="sc">+</span> mu)) <span class="sc">+</span></span>
+<span id="cb5-326"><a href="#cb5-326" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_color_manual</span>(<span class="at">name =</span> <span class="fu">if_else</span>(stacked, <span class="st">'Statistics'</span>, <span class="st">'Legend'</span>),</span>
+<span id="cb5-327"><a href="#cb5-327" aria-hidden="true" tabindex="-1"></a>                       <span class="at">breaks =</span> <span class="fu">c</span>(<span class="st">'tstat'</span>, <span class="st">'cval'</span>),</span>
+<span id="cb5-328"><a href="#cb5-328" aria-hidden="true" tabindex="-1"></a>                       <span class="at">labels =</span> legend_text,</span>
+<span id="cb5-329"><a href="#cb5-329" aria-hidden="true" tabindex="-1"></a>                       <span class="at">values =</span> <span class="fu">c</span>(<span class="at">tstat =</span> <span class="st">'blue'</span>, <span class="at">cval =</span> <span class="st">'red'</span>)) <span class="sc">+</span></span>
+<span id="cb5-330"><a href="#cb5-330" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>, <span class="at">face =</span> <span class="st">'bold'</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb5-331"><a href="#cb5-331" aria-hidden="true" tabindex="-1"></a>          <span class="at">plot.margin =</span> <span class="fu">unit</span>(<span class="fu">c</span>(<span class="fl">5.5</span>, <span class="fu">if_else</span>(stacked, <span class="fl">5.5</span>, <span class="dv">30</span>), <span class="fl">5.5</span>, <span class="fl">5.5</span>), <span class="st">'pt'</span>),</span>
+<span id="cb5-332"><a href="#cb5-332" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>, <span class="at">face =</span> <span class="st">'bold'</span>),</span>
+<span id="cb5-333"><a href="#cb5-333" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>)) <span class="sc">+</span></span>
+<span id="cb5-334"><a href="#cb5-334" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>),</span>
+<span id="cb5-335"><a href="#cb5-335" aria-hidden="true" tabindex="-1"></a>                    <span class="at">clip =</span> <span class="st">'off'</span>)</span>
+<span id="cb5-336"><a href="#cb5-336" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-337"><a href="#cb5-337" aria-hidden="true" tabindex="-1"></a>  p</span>
+<span id="cb5-338"><a href="#cb5-338" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="investigate-df_ipeds_pop" class="level2">
+<h2 class="anchored" data-anchor-id="investigate-df_ipeds_pop">Investigate <code>df_ipeds_pop</code></h2>
+<p>Show variable labels</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df_ipeds_pop <span class="sc">%&gt;%</span> <span class="fu">var_label</span>()</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $instnm</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Institution (entity) name"</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $unitid</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Unique identification number of the institution"</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $opeid6</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "First 6 digits of OPEID"</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $opeid</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Office of Postsecondary Education (OPE) ID Number"</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $control</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Control of institution"</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $c15basic</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Carnegie Classification 2015: Basic"</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $stabbr</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "State abbreviation"</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $city</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "City location of institution"</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $zip</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "ZIP code"</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $locale</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Degree of urbanization (Urban-centric locale)"</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $region</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Bureau of Economic Analysis (BEA) regions"</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuit_grad_res</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "In-state average tuition full-time graduates"</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $fee_grad_res</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "In-state required fees for full-time graduates"</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuit_grad_nres</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Out-of-state average tuition full-time graduates"</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $fee_grad_nres</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Out-of-state required fees for full-time graduates"</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuit_md_res</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Medicine: In-state tuition"</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $fee_md_res</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Medicine: In-state required fees"</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuit_md_nres</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Medicine: Out-of-state tuition"</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $fee_md_nres</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Medicine: Out-of-state required fees"</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuit_law_res</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Law: In-state tuition"</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $fee_law_res</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Law: In-state required fees"</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuit_law_nres</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Law: Out-of-state tuition"</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $fee_law_nres</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Law: Out-of-state required fees"</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $books_supplies</span></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Books and supplies 2022-23"</span></span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $roomboard_off</span></span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Off campus (not with family), room and board 2022-23"</span></span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $oth_expense_off</span></span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Off campus (not with family), other expenses 2022-23"</span></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuitfee_grad_res</span></span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "graduate, full-time, resident; avg tuition + required fees"</span></span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuitfee_grad_nres</span></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "graduate, full-time, non-resident; avg tuition + required fees"</span></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuitfee_md_res</span></span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "MD, full-time, state resident; avg tuition + required fees"</span></span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuitfee_md_nres</span></span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "MD, full-time, non-resident; avg tuition + required fees"</span></span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuitfee_law_res</span></span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Law, full-time, state resident; avg tuition + required fees"</span></span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $tuitfee_law_nres</span></span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Law, full-time, non-resident; avg tuition + required fees"</span></span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $coa_grad_res</span></span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "graduate, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses"</span></span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $coa_grad_nres</span></span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "graduate, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses"</span></span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $coa_md_res</span></span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "MD, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses"</span></span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $coa_md_nres</span></span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "MD, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses"</span></span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $coa_law_res</span></span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Law, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses"</span></span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $coa_law_nres</span></span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Law, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Show value labels for variables that are <code>labelled</code> class (code note run)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>df_ipeds_pop <span class="sc">%&gt;%</span> <span class="fu">select</span>(control,locale,region,c15basic) <span class="sc">%&gt;%</span> <span class="fu">val_labels</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Investigate data structure</p>
+<ul>
+<li>confirm one observation per unitid</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>df_ipeds_pop <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(unitid) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="at">n_per_key=</span><span class="fu">n</span>()) <span class="sc">%&gt;%</span> <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> <span class="fu">count</span>(n_per_key)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   n_per_key     n</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       &lt;int&gt; &lt;int&gt;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1         1   965</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="standard-deviation" class="level3">
+<h3 class="anchored" data-anchor-id="standard-deviation">Standard Deviation</h3>
+<p>Standard deviation is a measure of variability in the values of a dataset. Standard deviation measures how much the values deviate away from the mean.</p>
+<ul>
+<li><p>If all of the values in our dataset are the same, then the mean would be the same value and our standard deviation would be zero.</p></li>
+<li><p>A high standard deviation indicates that our values are spread out and there’s more variability in our dataset.</p></li>
+<li><p>A low standard deviation indicates that our values are close to the mean.</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Here is how we would find the standard deviation for in-state average tuition for full-time graduates</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 9807.926</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Since our standard deviation is high, this implies our values are spread out. Let's look at a histogram of the in-state average tuition for full-time graduates to check.</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="SSS_3.1-Lecture_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="describing-individual-variables-using-r" class="level3">
+<h3 class="anchored" data-anchor-id="describing-individual-variables-using-r">Describing individual variables using R</h3>
+<p>Using R, we can also use summary() to reduces multiple values down to a single summary output. This would give us the summary statistics such as mean, median, minimum, maximum, and 1st and 3rd quartiles for specific variables in the data frame. Another similar function, but has the ability to collapse a data frame into a single row, summarise() can be used to create new variables that we build from existing variables.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">#summary(x)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    1209    8108   11700   14312   17072   63468</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#syntax of 'summarise()'</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#summarize(data, new_variable = function(existing_variable))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="measures-of-central-tendency-mean-median-mode" class="level1">
+<h1>Measures of central tendency (Mean, median, mode)</h1>
+<p>Mean, median, and mode are the measures of central tendency. They are quite important as they are usually the numbers reported out. These usually represent the center of many data points, which means they provide a good summary of what we can expect from the group or dataset as a whole.</p>
+<ul>
+<li><p>Mean: The “average” or the “expectation” of the dataset. The mean takes the sum of all the values in a dataset and divides by the number of data points. The mean is useful at giving us insight on data that is normally distributed (we will cover types of distributions later in the week).</p></li>
+<li><p>Median: The value you find in the middle when you arrange the dataset in ascending order (smallest to largest). When there is no exact middle value, you take the mean of the two values closest to the middle. The median is less influenced by outliers.</p></li>
+<li><p>Mode: The value that appears the most in the dataset. Unlike the mean or the median, the mode is always a number that actually occurs in our dataset. Mode is most useful when there is a relatively large sample, so you’re likely to have a large number of popular values. Mode is also helpful when the values are not numeric.</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Let's double check if we will get the same values as we did above with the summary() function</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 14311.72</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 11700</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># R does not have a function for mode. Well, there is mode(), but that tells us the storage mode of an object. But we can make our function</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co"># define data_mode() function</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>data_mode <span class="ot">=</span> <span class="cf">function</span>() {</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># calculate mode of in-state average tuition for full-time graduates   </span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">names</span>(<span class="fu">sort</span>(<span class="sc">-</span><span class="fu">table</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res)))[<span class="dv">1</span>])</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co"># call data_mode() function</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="fu">data_mode</span>()</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "7176"</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="co"># We can try this on something that isn't numeric. Let's take a look at the most common city that institutions in our dataset are from.</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co"># define data_mode2() function</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>data_mode2 <span class="ot">=</span> <span class="cf">function</span>() {</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># calculate mode of the city that most institutions in our dataset are from </span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">names</span>(<span class="fu">sort</span>(<span class="sc">-</span><span class="fu">table</span>(df_ipeds_pop<span class="sc">$</span>city)))[<span class="dv">1</span>])</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a><span class="co"># call data_mode() function</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="fu">data_mode2</span>()</span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "New York"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="measures-of-dispersion-standard-deviation-variance-range-interquartile-range" class="level1">
+<h1>Measures of dispersion (Standard deviation, variance, range, interquartile range)</h1>
+<p>Range, interquartile range, variance, and standard deviation are the measures of dispersion or spread. They tell us how well the data is spread around the middle of the dataset, which can tell us how well the mean or median represents the data.</p>
+<ul>
+<li><p>Range: The distance we find when we take the largest value in the dataset and subtract the smallest value. The larger the range or distance between our most extreme points, the more spread out our dataset is.</p></li>
+<li><p>Interquartile range (IQR): The distance between the 75th percentile (Q3) and the 25th percentile (Q1). The IQR doesn’t account for the extreme values or outliers, it focuses on the middle 50% of our dataset. Two different datasets could have the same range, but the IQR gives information about their core data points.</p></li>
+<li><p>Variance: The measure of how far the values in a dataset are spread out from the mean. To find the variance, first find the mean of the dataset. Then find the difference between each data point and the mean value. Square each of those values, add up all the squared values, then divide up the sum of the square values by number of data points or values minus 1. Sample variance will always be slightly smaller than the population variance. To counter this bias, we usually divide the number of samples minus 1 (n-1), to getter a better guess for the population variance. Variance tells us how much variability is in our data.</p>
+<p><span class="math inline">\(Variance = \sigma^2 = \frac{1}{N} \sum_{i=1}^{N} (X_i - \mu)^2\)</span></p></li>
+<li><p>Standard deviation: The measure of how dispersed the data point is to the mean of the dataset. To find the standard deviation, first find the mean of the dataset. Then subtract the mean from each data point. Square each of those differences (which will make all the distances positive). Add up the squared differences together, then divide the sum by the number of data points minus 1. Finally, take the square root of the result.</p>
+<p><span class="math inline">\(\sigma = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (X_i - \mu)^2}\)</span></p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let's find the range of in-state average tuition for full-time graduates </span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">max</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">-</span> <span class="fu">min</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 62259</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># The function range() in R doesn't give you the range automatically, it gives you the smallest and the largest values or the range values. Let's double check the math from our function above.</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]  1209 63468</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="dv">63468</span> <span class="sc">-</span> <span class="dv">1209</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 62259</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate interquartile range (IQR) of in-state average tuition for full-time graduates </span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="fu">IQR</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 8964</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co"># To double check the function, we can use the code we learned earlier about percentiles</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res, <span class="at">probs =</span> <span class="fl">0.75</span>) <span class="sc">-</span> <span class="fu">quantile</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res, <span class="at">probs =</span> <span class="fl">0.25</span>)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  75% </span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8964</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate variance of in-state average tuition for full-time graduates </span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res)</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 96195409</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate standard deviation of in-state average tuition for full-time graduates </span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(df_ipeds_pop<span class="sc">$</span>tuit_grad_res)</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 9807.926</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

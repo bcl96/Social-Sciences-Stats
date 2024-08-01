@@ -1,0 +1,63 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 7.2 Introduction to Bivariate Regression (continued)"
+format: pdf
+editor: source
+---
+Week 7: Learning goal -  Demonstrate estimation and prediction of bivariate regression analysis in R 
+
+ 
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+
+Load packages:
+```{r, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+
+```
+
+Resources used to create this lecture:
+
+# Estimation
+__General things we do in regression analysis__
+
+1. __Estimation__ 
+    - How do we choose estimates of $\beta_0$ and $\beta_1$ using sample data?
+
+<br>
+
+2. __Prediction__ 
+    - What is the predicted value of Y for someone with a particular value of X?
+  
+<br>
+  
+3. __Hypothesis testing__ [focus of the rest of the semester]
+    - Hypothesis testing and confidence intervals about $\beta_1$
+  
+
+<br>
+
+Step 1 of regression is to estimate parameters of the population linear regression model
+
+  - $Y_i = \beta_0 + \beta_1X_i + u_i$
+
+<br>
+
+__Goal of estimation: use sample data to estimate population parameters__:
+
+  - Previous lecture: we used sample data on variable $Y$ to estimate population mean, $\mu_Y$
+    - $\bar{Y}$ (sample mean of $Y$) is an estimate of $\mu_Y$
+  - This lecture: use sample data to estimate the population intercept, $\beta_0$, and the population regression coefficient, $\beta_1$
+    - $\hat{\beta_0}$ is an estimate of $\beta_0$
+    - $\hat{\beta_1}$ is an estimate of $\beta_1$
+
+
+
+
+
+

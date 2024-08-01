@@ -1,0 +1,35 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 6.1 Comparing Two Groups"
+format: pdf
+editor: source
+---
+Week 6: Learning goal - Evaluate two groups with hypothesis testing and comparing population means.
+
+ 
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+
+Load packages:
+```{r, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+best_netflix <- read_csv("https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/netflix_data/Best%20Shows%20Netflix.csv")
+```
+
+Resources used to create this lecture:
+
+# Meeting 1: Comparing Two Groups
+	-Hypothesis testing about groups
+
+
+
+
+
+
+
+
