@@ -1,0 +1,787 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 1.2 Basics of R"
+format: pdf
+editor: source
+---
+Week 1: Learning goal - Understand what and how to access R and R studio.
+
+ 
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+
+### Libraries we will use today
+
+"Load" the package we will use today (output omitted)
+
+- __you must run this code chunk__
+```{r, message=FALSE}
+library(tidyverse)
+```
+If package not yet installed, then must install before you load. Install in "console" rather than .Rmd file
+
+- Generic syntax: `install.packages("package_name")`
+- Install "tidyverse": `install.packages("tidyverse")`
+
+Note: when we load package, name of package is not in quotes; but when we install package, name of package is in quotes:
+
+- `install.packages("tidyverse")`
+- `library(tidyverse)`
+
+### tidyverse
+The package we just downloaded, tidyverse,  is a programming package in R that helps us transform data. This package is important for data mutation and visualization.
+
+# Investigating data patterns
+
+### Introduction to the `dplyr` library
+
+`dplyr`, a package within the `tidyverse` suite of packages, provide tools for manipulating data frames
+
+- Wickham describes functions within `dplyr` as a set of "verbs" that fall in the broader categories of __subsetting__, __sorting__, and __transforming__
+
+-select() extracts columns and returns a tibble.
+
+-arrange() changes the ordering of the rows.
+
+-filter() picks cases based on their values.
+
+-mutate() adds new variables that are functions of existing variables.
+
+-rename() easily changes the name of a column(s).
+
+-pull() extracts a single column as a vector.
+
+Today | Upcoming weeks
+------------- | -------------
+__Subsetting data__ | __Transforming data__
+- `select()` variables  |  - `summarize()` calculates across rows
+- `filter()` observations | - `group_by()` to calculate across rows within groups
+- `mutate()` creates new variables |
+- `pull()` variables 
+__Sorting data__ | 
+- `arrange()` | 
+ __Transforming data__
+- `rename`() variables |
+
+All `dplyr` verbs (i.e., functions) work as follows
+
+1. first argument is a data frame
+1. subsequent arguments describe what to do with variables and observations in data frame
+    - refer to variable names without quotes
+1. result of the function is a new data frame
+
+
+## Data for lecture sections on select(), arrange(), filter(), mutate(), rename(), and pull() functions
+
+**Lecture overview**
+
+- Introduction to Netflix data on IMDb score and votes
+- Brief review of statistics (selected concepts)
+
+
+## Libraries we will use
+
+```{r}
+#install.packages('tidyverse') # if you haven't installed already
+#install.packages('labelled') # if you haven't installed already
+
+library(tidyverse) # load tidyverse package
+library(labelled) # load labelled package package
+```
+
+# Netflix Data
+
+The [Netflix Data](https://data.world/gonzandrobles/netflix-movies-and-series) is a dataset created on *Data World* that compiled the best shows and movies on Netflix (as of May 2022).
+
+- We will use data from the *Netflix Data* in lecture and potentially for some assignments
+- Relevant links
+  - [Data documentation](https://data.world/gonzandrobles/netflix-movies-and-series)
+  - [Data download](https://github.com/bcl96/Social-Sciences-Stats/tree/main/data/netflix_data)
+
+
+In the following sub-sections, we "load" the data, create modified datasets, investigate the data, and run some basic descriptive statistics
+
+- **Your are not responsible for knowing the below code**
+  - You will only be responsible for knowing code that we explicitly teach you during the quarter
+- But try to follow the general logic of what the code is doing
+- And try running the below "code chunks" on your own computer
+
+
+## Data for lecture sections on pipes and mutate() function
+
+### Load .csv data frame `netflix_data`
+
+
+```{r}
+#load netflix data
+netflix_data <- read_csv("https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/netflix_data/Netflix%20Movies%20Dataset%20All.csv")
+
+#print(netflix_data)
+```
+
+Object `netflix_data`
+
+- Collection of all movies that have at least an IMDb score of 6.9 and at least 10,000 votes
+
+Observations on `netflix_data`
+
+- each observation represents a movie or tv series
+```{r}
+typeof(netflix_data)
+class(netflix_data)
+dim(netflix_data)
+```
+
+Variables on `netflix_data`
+
+- some vars provide details about the movie or tv show
+  - e.g., `TITLE`, `MAIN_GENRE`, `MAIN_PRODUCTION`
+- some vars provide data about the IMDb votes and scores
+  - e.g., `SCORE`, `NUMBER_OF_VOTES`
+- some vars provide data about year the media was released
+  - e.g., `RELEASE_YEAR` is year the movie or tv show was first released
+```{r, results="hide"}
+names(netflix_data)
+str(netflix_data)
+glimpse(netflix_data) # tidyverse function, similar to str()
+```
+
+
+Variable `MAIN_PRODUCTION` identifies where the movie or film was produced
+
+Imagine we want to isolate all the U.S. productions
+
+1. Investigate variable type/structure. 
+
+- A dichotomous var, but stored as character in `netflix_data`. So must use quotes (`''` or `""`) to filter/subset based on values of `MAIN_PRODUCTION`
+```{r}
+str(netflix_data$MAIN_PRODUCTION)
+```
+
+2. Create frequency table to identify possible values of `MAIN_PRODUCTION`
+```{r}
+table(netflix_data$MAIN_PRODUCTION, useNA = "always")
+```
+
+3. Isolate all the US production (output omitted)
+```{r results="hide"}
+filter(netflix_data, MAIN_PRODUCTION == "US")
+```
+
+
+## select() variables
+
+### Select variables using `select()` function
+
+Printing observations is key to investigating data, but datasets often have hundreds, thousands of variables
+
+`select()` function selects __columns__ of data (i.e., variables) you specify
+
+- first argument is the name of data frame object
+- remaining arguments are variable names, which are separated by commas and without quotes
+
+Without __assignment__ (`<-`), `select()` by itself simply prints selected vars
+```{r}
+#?select
+#duration keep it, to see who wants to watch longer stuff
+#select but use minus to drop season and release year, to show it yields the same as just picking those to select
+names(netflix_data)
+select(netflix_data, TITLE, SCORE, NUMBER_OF_VOTES, DURATION, MAIN_GENRE, MAIN_PRODUCTION)
+```
+
+### Select variables using `select()` function
+
+Recall that all `dplyr` functions (e.g., `select()`) return a new data frame object
+
+- __type__ equals "list"
+- __length__ equals number of vars you select
+
+```{r}
+typeof(select(netflix_data, TITLE, SCORE, NUMBER_OF_VOTES, MAIN_GENRE, MAIN_PRODUCTION))
+length(select(netflix_data, TITLE, SCORE, NUMBER_OF_VOTES, MAIN_GENRE, MAIN_PRODUCTION))
+```
+
+`glimpse()`: tidyverse function for viewing data frames
+
+- a cross between `str()` and simply printing data
+```{r, eval=FALSE}
+?glimpse
+glimpse(netflix_data)
+```
+
+`glimpse()` a `select()` set of variables
+```{r}
+glimpse(select(netflix_data, TITLE, SCORE, NUMBER_OF_VOTES, MAIN_GENRE, MAIN_PRODUCTION))
+```
+
+### Select variables using `select()` function
+
+With __assignment__ (`<-`), `select()` creates a new object containing only the variables you specify
+
+```{r}
+netflix_small <- select(netflix_data, TITLE, SCORE, NUMBER_OF_VOTES, MAIN_GENRE, MAIN_PRODUCTION)
+
+glimpse(netflix_small)
+```
+
+### Select
+
+`select()` can use "helper functions" `starts_with()`, `contains()`, and `ends_with()` to choose columns 
+
+Example:
+```{r}
+names(netflix_data)
+select(netflix_data, starts_with("MAIN"))
+select(netflix_data, contains("OF"))
+select(netflix_data, ends_with("RE"))
+```
+
+1. Use `select()` to familiarize yourself with variables in the data frame
+1. Practice using the `contains()` and `ends_with()` helper functions to to choose variables
+
+### Arrange() 
+`arrange()` function can change the ordering of the rows (i.e., sort rows), it "arranges" rows in a data frame by sortsing the observations
+
+\medskip
+Syntax: `arrange(x,...)`
+
+- First argument, `x`, is a data frame
+- Subsequent arguments are a "comma separated list of unquoted variable names"
+
+```{r, results="hide"}
+netflix_data
+arrange(netflix_data, SCORE)
+```
+Data frame goes back to previous order unless you __assign__ the new order
+```{r, results="hide"}
+netflix_data
+netflix_data <- arrange(netflix_data, SCORE)
+netflix_data
+```
+
+### Ascending and descending order
+
+- `arrange()` sorts in __ascending__ order by default
+- use `desc()` to sort a column by descending order
+
+```{r results="hide"}
+arrange(netflix_data, desc(SCORE))
+```
+
+Can sort by multiple variables
+```{r results="hide"}
+arrange(netflix_data, desc(SCORE), desc(RELEASE_YEAR), TITLE)
+
+#sort by descending by IMDb score and descending by release year and by title; combine with select
+
+select(arrange(netflix_data, desc(SCORE), desc(RELEASE_YEAR), TITLE),
+       TITLE, RELEASE_YEAR, SCORE, NUMBER_OF_VOTES, NUMBER_OF_SEASONS, contentType)
+
+```
+
+### `arrange()`, missing values sorted at the end
+
+Missing values automatically sorted at the end, regardless of whether you sort ascending or descending
+
+Below, we sort by score, then by release year, then by title
+```{r, results="hide"}
+#by descending score, descending release year, title
+select(arrange(netflix_data, desc(SCORE), desc(RELEASE_YEAR), TITLE),
+       TITLE, RELEASE_YEAR, SCORE, NUMBER_OF_VOTES, NUMBER_OF_SEASONS, contentType)
+
+#by score, release year, descending title
+select(arrange(netflix_data, SCORE, RELEASE_YEAR, desc(TITLE)),
+       TITLE, RELEASE_YEAR, SCORE, NUMBER_OF_VOTES, NUMBER_OF_SEASONS, contentType)
+```
+Can sort by `is.na` to put missing values first
+```{r}
+select(arrange(netflix_data, desc(is.na(contentType)), desc(SCORE), desc(RELEASE_YEAR), TITLE),
+       TITLE, RELEASE_YEAR, SCORE, NUMBER_OF_VOTES, NUMBER_OF_SEASONS, contentType)
+```
+
+### Rename variables
+
+`rename()` function renames variables within a data frame object
+
+\medskip Syntax:
+
+- `rename(obj_name, new_name = old_name,...)`
+\medskip
+```{r results="hide"}
+rename(netflix_data, CONTENT_TYPE = contentType, DESCRIPTION = description, CONTENT_RATING = contentRating, GENRE = genre, FORMATTED_DURATION = formattedDuration, RELEASED_DATE = releasedDate, HOURS_VIEWED = 'Hours Viewed', ACTORS = actors, DIRECTOR = director, CREATOR = creator, AUDIO = audio, SUBTITLE = subtitle, SEASON_START_DATE = seasonStartDate)
+
+names(netflix_data)
+```
+Variable names do not change permanently unless we combine rename with assignment
+\medskip
+```{r results="hide"}
+rename_netflix_data <- rename(netflix_data, CONTENT_TYPE = contentType, DESCRIPTION = description, CONTENT_RATING = contentRating, GENRE = genre, FORMATTED_DURATION = formattedDuration, RELEASED_DATE = releasedDate, HOURS_VIEWED = 'Hours Viewed', ACTORS = actors, DIRECTOR = director, CREATOR = creator, AUDIO = audio, SUBTITLE = subtitle, SEASON_START_DATE = seasonStartDate)
+
+names(rename_netflix_data)
+rm(rename_netflix_data)
+```
+
+## filter() rows
+
+### The `filter()` function
+
+`filter()` allows you to __select observations__ based on values of variables
+
+- Arguments
+    - first argument is name of data frame
+    - subsequent arguments are _logical expressions_ to filter the data frame
+    - Multiple expressions separated by commas work as __AND__ operators (e.g., condtion 1 `TRUE` AND condition 2 `TRUE`)
+
+- What is the result of a `filter()` command?
+    - `filter()` returns a data frame consisting of rows where the condition is `TRUE`
+
+```{r, eval=FALSE}
+?filter
+```
+
+Example from data frame object `netflix_data`, each obs is a show or film
+
+- Show all obs where the show had a IMDb score of 8.0 [output omitted]
+```{r results="hide"}
+filter(netflix_data, SCORE == 8.0)
+filter(netflix_data, SCORE == 8) #same
+```
+
+Note that resulting object is list, consisting of obs where condition `TRUE`
+```{r}
+nrow(netflix_data)
+nrow(filter(netflix_data, SCORE == 8))
+```
+
+### The `filter()` function, base R equivalents
+
+**Task**: Count the number of shows that had an IMDb score of 8.
+
+\bigskip
+
+**[tidyverse]** Using `filter()`:\smallskip
+```{r}
+nrow(filter(netflix_data, SCORE == 8))
+```
+
+\bigskip
+
+**[base R]** Using `[]` and `$`:\smallskip
+```{r}
+nrow(netflix_data[netflix_data$SCORE == 8, ])
+```
+
+\bigskip
+
+**[base R]** Using `subset()`:\smallskip
+```{r}
+nrow(subset(netflix_data, SCORE == 8))
+```
+
+### Filter, character variables
+
+Use single quotes `''` or double quotes `""` to refer to values of character variables
+```{r}
+glimpse(select(netflix_data, SCORE, MAIN_GENRE))
+```
+
+Identify all shows that had an IMDb score of 8 and 2 seasons
+
+- Shows that had an IMBd score of 8
+```{r results="hide"}
+filter(netflix_data, SCORE == 8)
+```
+
+- Shows that had 2 seasons
+```{r results="hide"}
+filter(netflix_data, NUMBER_OF_SEASONS == 2)
+```
+
+- Shows that had an IMDb score of 8 and two seasons
+```{r results="hide"}
+filter(netflix_data, SCORE == 8, NUMBER_OF_SEASONS == 2)
+```
+
+### Filter by multiple conditions, base R equivalents
+
+**Task**: Count the number of shows that had an IMDb score of 8, had 2 seasons, and was a drama.
+
+\medskip
+
+**[tidyverse]** Using `filter()`:\smallskip
+```{r}
+nrow(filter(netflix_data, SCORE == 8, NUMBER_OF_SEASONS == 2,
+       MAIN_GENRE == "drama"))
+```
+
+\medskip
+
+**[base R]** Using `[]` and `$`:\smallskip
+```{r}
+nrow(netflix_data[netflix_data$SCORE == 8 &
+                    netflix_data$NUMBER_OF_SEASONS == 2 &
+                    netflix_data$MAIN_GENRE == "drama", ])
+```
+
+\medskip
+
+**[base R]** Using `subset()`:\smallskip
+```{r}
+nrow(subset(netflix_data, SCORE == 8 & NUMBER_OF_SEASONS == 2 & 
+              MAIN_GENRE == "drama"))
+```
+
+### Logical operators for comparisons
+
+logical operators useful for: filter obs w/ `filter()`; create variables w/ `mutate()`
+
+- logical operators also work when using Base R functions
+
+Operator symbol | Operator meaning
+-------|-------
+`==` | Equal to
+`!=` | Not equal to
+`>` | greater than
+`>=` | greater than or equal to
+`<` | less than
+`<=` | less than or equal to
+`&` | AND 
+`|` | OR
+`%in%` | includes
+
+- Visualization of "Boolean" operators (e.g., AND, OR, AND NOT)
+
+!["Boolean" operations, x=left circle, y=right circle, from Wichkam (2018)]{width=40%}
+
+### Aside: `count()` function
+
+\medskip `count()` function from `dplyr` package counts the number of obs by group
+```{r, eval=FALSE, echo=FALSE}
+?count
+```
+
+__Syntax__ [see help file for full syntax]
+
+- `count(x,...)`
+
+__Arguments__ [see help file for full arguments]
+
+- `x`: an object, often a data frame
+- `...`: variables to group by
+
+Examples of using `count()`
+
+- Without vars in `...` argument, counts number of obs in object
+```{r, results="hide"}
+count(netflix_data)
+  # netflix_data %>% count() # same as above but using pipes
+str(count(netflix_data))
+  # netflix_data %>% count() %>% str() # same as above but using pipes
+```
+- With vars in `...` argument, counts number of obs per variable value
+    - This is the best way to create frequency table, better than `table()`
+    - note: by default, `count()` always shows `NAs` [this is good!]
+```{r, results="hide"}
+count(netflix_data, MAIN_GENRE)
+  # netflix_data %>% count(MAIN_GENRE) # same as above but using pipes
+str(count(netflix_data, MAIN_GENRE))
+  # netflix_data %>% count(MAIN_GENRE) %>% str() # same as above but using pipes
+```
+
+### Filters and comparisons, Demonstration
+
+Shows that had an IMDb score of 8 and/or 2 seasons \bigskip
+
+```{r results="hide"}
+# a score of 8 AND  2 seasons
+
+filter(netflix_data, SCORE == 8, NUMBER_OF_SEASONS == 2)
+filter(netflix_data, SCORE == 8 & NUMBER_OF_SEASONS == 2) #same
+
+netflix_data[netflix_data$SCORE == 8 &
+            netflix_data$NUMBER_OF_SEASONS == 2, ] # using [] and $
+
+subset(netflix_data, SCORE == 8 & NUMBER_OF_SEASONS == 2) # using subset()
+
+nrow(subset(netflix_data, SCORE == 8 & NUMBER_OF_SEASONS == 2))
+```
+
+\bigskip
+
+```{r results="hide"}
+#  a score of 8 OR  2 seasons
+filter(netflix_data, SCORE == 8 | NUMBER_OF_SEASONS == 2)
+
+netflix_data[netflix_data$SCORE == 8 |
+            netflix_data$NUMBER_OF_SEASONS == 2, ] # using [] and $
+
+subset(netflix_data, SCORE == 8 |
+         NUMBER_OF_SEASONS == 2) # using subset()
+```
+
+### Filters and comparisons, Demonstration (cont.)
+
+Apply `count()` function on top of `filter()` function to count the number of observations that satisfy criteria
+
+- Avoids printing individual observations\medskip
+
+```{r}
+# Number of shows that get an IMDb score of 8 AND 2 seasons
+count(filter(netflix_data, SCORE == 8, NUMBER_OF_SEASONS == 2))
+
+# Number of shows that get an IMDb score of 8 OR 2 seasons
+count(filter(netflix_data, SCORE == 8 | NUMBER_OF_SEASONS == 2))
+```
+
+- Note: You could also use any of the base R equivalents from the previous slide
+
+### Filters and comparisons, `>=`
+
+Number of action shows that have at least two seasons compared to number of shows that have an IMDb score of 8. \medskip 
+
+```{r}
+# at least have two seasons
+count(filter(netflix_data, MAIN_GENRE == "action", NUMBER_OF_SEASONS >= 2))
+
+# at least have two seasons and an IMDb score of 8
+count(filter(netflix_data, MAIN_GENRE == "action", NUMBER_OF_SEASONS >= 2,
+             SCORE == 8))
+```
+
+### Filters and comparisons, `>=` (cont.)
+
+Number of action shows that have at least an IMDb score of 8 compared to number of shows that have 2 seasons:\medskip 
+
+```{r}
+# at least have an IMDb score of 8
+count(filter(netflix_data, MAIN_GENRE == "action", SCORE >= 8))
+
+# at least have an IMDb score of 8 and two seasons
+count(filter(netflix_data, MAIN_GENRE == "action", SCORE >= 8,
+             NUMBER_OF_SEASONS == 2))
+```
+
+### Filters and comparisons, not equals (`!=`)
+
+Count the number of shows that have two seasons that are not action.
+```{r}
+#number of shows with two seasons
+count(filter(netflix_data, NUMBER_OF_SEASONS == 2))
+
+#number of shows with two seasons that are not action
+count(filter(netflix_data, NUMBER_OF_SEASONS == 2, MAIN_GENRE != "action"))
+
+#number of shows with two seasons that are action
+#count(filter(netflix_data, NUMBER_OF_SEASONS == 2, MAIN_GENRE == "action"))
+
+```
+
+### Filters and comparisons, `%in%` operator
+
+What if you wanted to count the number of shows with an IMDb score of 8 in a group of genres?
+```{r}
+count(filter(netflix_data, SCORE == 8, MAIN_GENRE == "action" | 
+               MAIN_GENRE == "drama" | MAIN_GENRE == "comedy"))
+```
+Easier way to do this is with `%in%` operator
+```{r}
+count(filter(netflix_data, SCORE == 8, MAIN_GENRE %in% c("action","drama","comedy")))
+```
+
+Select the shows that are drama with either an IMDb score of 8 or 8.1
+```{r}
+count(filter(netflix_data, SCORE %in% 8:8.1, MAIN_GENRE == "drama"))
+```
+### Identifying data type and possible values helpful for filtering
+
+- `typeof()` and `str()` shows internal data type of a variable 
+- `table()` to show potential values of categorical variables
+
+```{r}
+typeof(netflix_data$MAIN_GENRE)
+str(netflix_data$MAIN_GENRE) # double quotes indicate character
+table(netflix_data$MAIN_GENRE, useNA="always")
+
+typeof(netflix_data$MAIN_PRODUCTION)
+str(netflix_data$MAIN_PRODUCTION)
+```
+
+Now that we know `MAIN_GENRE` is a character, we can filter values
+```{r}
+count(filter(netflix_data, MAIN_GENRE == "drama", MAIN_PRODUCTION == "US"))
+#below code would return an error because variables are character
+#count(filter(netflix_data, MAIN_GENRE == drama, MAIN_PRODUCTION == US))
+```
+
+### Filtering and missing values
+
+Wickham (2018) states:
+
+- "`filter()` only includes rows where condition is TRUE; it excludes both `FALSE` and `NA` values. To preserve missing values, ask for them explicitly:"
+
+\medskip Investigate var `netflix_data$NUMBER_OF_VOTES`, number of votes the show received
+
+- only shows produced in the U.S.
+
+```{r}
+
+#shows produced in the U.S. with less than 50,000 votes
+count(filter(netflix_data, MAIN_PRODUCTION == "US", NUMBER_OF_VOTES<50000))
+#shows produced in the U.S. with the number of votes is missing
+count(filter(netflix_data, MAIN_PRODUCTION == "US", is.na(NUMBER_OF_VOTES)))
+#shows produced in the U.S. with less than 50,000 votes OR votes is missing
+count(filter(netflix_data, MAIN_PRODUCTION == "US", NUMBER_OF_VOTES<50000 | is.na(NUMBER_OF_VOTES)))
+```
+
+### Introduce `mutate()` function
+
+`mutate()` is __tidyverse__ approach to creating variables (not __Base R__ approach)
+
+Description of `mutate()`
+
+- creates new columns (variables) that are functions of existing columns
+- After creating a new variable using `mutate()`, every row of data is retained
+- `mutate()` works best with pipes `%>%`
+
+__Task__: 
+
+- Using data frame `school_v2` create new variable that measures the pct of students on free/reduced lunch (output omitted)
+```{r, results='hide'}
+# create new dataset with fewer vars; not necessary to do this
+netflix_new <- netflix_data %>%  select(TITLE, SCORE, MAIN_PRODUCTION, NUMBER_OF_VOTES)
+
+# create new var
+netflix_new %>% mutate(total_score = SCORE*NUMBER_OF_VOTES)
+
+# remove data frame object
+rm(netflix_new)
+```
+
+### Investigate `mutate()` syntax
+
+
+```{r, eval=FALSE, echo=FALSE}
+?mutate
+```
+
+__Usage (i.e., syntax)__
+
+- `mutate(.data,...)`
+
+__Arguments__
+
+- `.data`: a data frame
+    - if using `mutate()` after pipe operator `%>%`, then this argument can be omitted
+        - Why? Because data frame object to left of `%>%` "piped in" to first argument of `mutate()`
+- `...`: expressions used to create new variables
+    - "Name-value pairs of expressions"
+    - "The name of each argument will be the name of a new variable, and the value will be its corresponding value." 
+    - "Use a `NULL` value in mutate to drop a variable." 
+    - "New variables overwrite existing variables of the same name"
+
+
+__Value__
+
+- returns a (data frame) object that contains the original input data frame and new variables that were created by `mutate()`
+
+### Investigate `mutate()` syntax
+
+
+```{r, eval=FALSE, echo=FALSE}
+?mutate
+```
+
+__Can create variables using standard mathematical or logical operators__  [output omitted]
+
+```{r}
+glimpse(netflix_data)
+netflix_data %>% 
+  select(TITLE, SCORE, MAIN_PRODUCTION, NUMBER_OF_VOTES) %>%
+  mutate( # each argument creates a new variable, name of argument is name of variable
+    TOTAL_SCORE = SCORE*NUMBER_OF_VOTES,
+    RETURN_SCORE = TOTAL_SCORE/NUMBER_OF_VOTES,
+    ) %>%
+  select(TITLE, SCORE, MAIN_PRODUCTION, NUMBER_OF_VOTES, RETURN_SCORE)
+```
+
+
+__Can create variables using "helper functions" called within `mutate()`__ [output omitted]
+
+- These are standalone functions can be called *within* `mutate()`
+    - e.g., `if_else()`, `recode()`, `case_when()`
+
+```{r, results="hide"}
+table(netflix_data$MAIN_PRODUCTION, useNA = "always")
+  
+netflix_data %>% 
+  select(TITLE, SCORE, MAIN_PRODUCTION, NUMBER_OF_VOTES) %>%
+  mutate(AMERICAN = if_else(MAIN_PRODUCTION == "US", 1, 0)) 
+```
+
+### Introduce `mutate()` function
+
+New variable not retained unless we __assign__ `<-` it to an object (existing or new)
+
+\medskip 
+
+- __`mutate()` without assignment__
+```{r, results='hide'}
+netflix_data %>% 
+  mutate(TOTAL_SCORE = SCORE*NUMBER_OF_VOTES, RETURN_SCORE = TOTAL_SCORE/NUMBER_OF_VOTES)
+
+names(netflix_data)
+```
+
+\medskip 
+
+- __`mutate()` with assignment__
+```{r, results="hide"}
+new_netflix_data <- netflix_data %>% 
+  select(TITLE, SCORE, MAIN_PRODUCTION, NUMBER_OF_VOTES) %>%
+  mutate(TOTAL_SCORE = SCORE*NUMBER_OF_VOTES,
+    RETURN_SCORE = TOTAL_SCORE/NUMBER_OF_VOTES)
+
+names(new_netflix_data)
+rm(new_netflix_data)
+```
+
+### Introduce `rename`()` function
+
+`rename()` is __tidyverse__ approach to rename variables but will keep variables that are not explicitly mentioned
+
+If we want to rename all of our variables to lower case, we can use the help of the `tolower()` function.  
+
+```{r}
+# Example of what `tolower()` function does
+text <- "Hello, World!"
+lower_text <- tolower(text)
+print(lower_text) 
+
+# Renaming our variables in `netflix_data` to lower case
+names(netflix_data) <- tolower(names(netflix_data))
+
+netflix_data
+```
+
+### Introduce `pull()` function
+
+`pull()` is __tidyverse__ approach to extract the specified column from a data frame or tibble and returns it as a vector
+
+```{r}
+netflix_data %>% pull(release_year)
+```
+
+  - you can also use column indices or names with pull():
+
+```{r}
+# Extract by column name
+netflix_data %>% pull("score")
+
+# Extract by column index
+netflix_data %>% pull(3)  # This would extract the 3rd column of our data frame, which is "score"
+```
+
