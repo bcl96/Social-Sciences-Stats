@@ -1,0 +1,127 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 6.1 Comparing Two Groups"
+format: pdf
+editor: source
+---
+Week 6: Learning goal - Evaluate two groups with hypothesis testing and comparing population means.
+
+ 
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+Lecture overview:
+
+- Hypothesis testing about two groups
+
+Load packages:
+```{r, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(labelled)
+library(patchwork)
+
+```
+
+## Hypothesis Testing About Two Groups
+
+Last week, we discussed the assumptions and steps of hypothesis testing both by hand and by using R. This week, we are getting more practice on hypothesis testing by investigating what it means to do a hypothesis test on two groups.
+
+## Why do we care about hypothesis testing between two groups?
+
+Let's say you want to find out which of the pizza places around Westwood has the best pizza. You have heard that the Lamonica's and Enzo's are fan favorites. As a social scientist, you decide the best way to find out is to find 16 of your friends and give half of them a slice of cheese pizza from Lamonica's and the other half of them a slice of cheese pizza from Enzo's. (You'll serve all the slices on identical paper plates so there's no identify markings of where the pizza slices are from.) You have each friend rate their slice between 1 to 10. From these blind taste tests, Lamonica's had an average or mean of 8.2 and Enzo's had an average of 8.45. Now, with the 0.25 lead, you're thinking that must mean Enzo's has the better pizza. But what if this 0.25 difference was simply due to chance?
+
+```{r}
+lm_pizza <- c(7.7, 8.5, 8.7, 7.8, 8.1, 8.6, 8.0, 8.2)
+mean(lm_pizza)
+ez_pizza <- c(6.4, 10.7, 5.9, 9.8, 11.4, 4.1, 12.2, 7.1) 
+mean(ez_pizza)
+
+diff_pizza <- mean(lm_pizza) - mean(ez_pizza)
+diff_pizza
+```
+
+This is when we can use hypothesis testing between two groups to find out. First we need to have a null hypothesis and alternative hypothesis.
+
+- Null hypothesis, $H_0$
+  - $H_0: \mu_1 = \mu_2$
+  - $H_0:$ there is no difference between the pizza shops.
+- Alternative hypothesis, $H_a$
+  - $H_a: \mu_1 \ne \mu_2$
+  - $H_a:$ there is a difference between the pizza shops.
+
+Now we will do a t-test, this time a two sample t-test. This is also called an independent or unpaired t-test. For two sample t-test, the measure of average variation is the standard error. Let's go through each step of how to do a two sample t-test. 
+
+Hint these are formulas for standard error of the difference between the two means:
+$$SE = \sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}$$
+
+and the formula to calculate the t-statistic 
+$$t = \frac{\bar{X}_1 - \bar{X}_2}{SE}$$
+
+and general formula for (any) test statistic
+$$ test\_statistic = \frac{sample\_estimate - value\_associated\_with\_H_0}{sample\_standard\_error}$$
+
+and the formula to calculate degrees of freedom, we use this to calculate the degrees of freedom for a two-sample t-test when the variances are not assumed to be equal (Welch’s t-test).
+$$df = \frac{\left(\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}\right)^2}{\frac{\left(\frac{s_1^2}{n_1}\right)^2}{n_1 - 1} + \frac{\left(\frac{s_2^2}{n_2}\right)^2}{n_2 - 1}}$$
+
+
+```{r}
+# 1. Calculate the Means
+mean_lm <- mean(lm_pizza) # this is $\bar{X_1}$ 
+mean_ez <- mean(ez_pizza) # this is $\bar{X_2}$ 
+
+# 2. Calculate the Variance
+var_lm <- var(lm_pizza)
+var_ez <- var(ez_pizza)
+
+# 3. Calculate the Standard Errors
+n_lm <- length(lm_pizza)
+n_ez <- length(ez_pizza)
+
+SE <- sqrt(var_lm/n_lm + var_ez/n_ez)
+SE
+
+# 4. Calculate the t-statistic
+t_stat <- (mean_lm - mean_ez) / SE
+t_stat
+
+# 5. Calculate degrees of freedom
+# This can be done using the formula for unequal variances (Welch’s t-test)
+df <- (var_lm/n_lm + var_ez/n_ez)^2 / 
+      ((var_lm^2 / (n_lm^2 * (n_lm - 1))) + (var_ez^2 / (n_ez^2 * (n_ez - 1))))
+df
+
+# 6. Calculate the p-value 
+# We can find the p-value of the calculated t-statistic by using the pt() function in R
+p_value <- 2 * pt(-abs(t_stat), df)
+p_value
+```
+The t-statistic is `-0.237`, but remember, we just care about the absolute value of the t-statistic., which tells us how far the sample mean difference is from zero (our $H_0$ difference). This value of `-0.237` is quite small, which means that the observed difference between the means of `lm_pizza` and `ez_pizza` is less than one-quarter of a standard error away from zero. This suggests to us that the difference is minimal.
+
+- Remember, the t-statistic by itself does not determine the statistical significance, but it is used for us to calculate the p-value.
+
+More importantly, the p-value we ended up with was `0.819` which is much greater than the typical alpha level or significance level of 0.05. Therefore, we fail to reject the null hypothesis. Which means, there is no significant different between the means of the two groups `lm_pizza` and `ez_pizza`. Looks like there is no clear winner of which pizza is better in Westwood. 
+
+- Reminder of how to understand alpha level of 0.05: This means in the long run, only 5% of the tests conducted on groups with no real difference will incorrectly reject the null. 
+
+While we did find our p-value and was able to conduct our two sample t-test, that was a lot of work! 
+
+Another way, a much more direct way, is to use the `t.test()` in R to perform the t-statistic test
+
+```{r}
+# Structure of the t.test()
+# t.test(x, y, alternative = "two.sided", var.equal = FALSE, paired = FALSE)
+
+# Perform the two-sample t-test
+t_test_result <- t.test(lm_pizza, ez_pizza, var.equal = FALSE)
+
+# Display the result
+t_test_result
+```
+See not only does the `t.test()` function reduce a lot of steps for us, it also outputs the findings neatly for us. It also shows us the 95% confidence interval (which we will get into more later in the course during week 9). 
+
+Now that we understand the parts of two sample t-test, we will practice later this week how to conduct this same hypothesis testing to compare the population means of two groups. 
+
