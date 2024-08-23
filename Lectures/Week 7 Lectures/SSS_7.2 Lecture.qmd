@@ -1,0 +1,418 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 7.2 Introduction to Bivariate Regression (continued)"
+format: pdf
+editor: source
+---
+Week 7: Learning goal -  Demonstrate estimation and prediction of bivariate regression analysis in R 
+
+ 
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+Lecture overview:
+
+-Estimation
+		-Population mean
+		-Regression
+		-Writing out models
+
+-Regression in R
+		- introducing tidymodels
+		- understanding object created by regression
+
+- Prediction
+
+Load packages:
+```{r, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(haven)
+
+load(url('https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/els/output_data/els_stu.RData'))
+
+# ELS data frames
+els <- df_els_stu_allobs_fac
+```
+
+Conceptually, the next step in learning about regression is understanding how we choose estimates of $\beta_0$ and $\beta_1$ using sample data? This step is called "estimation"
+
+Before providing a conceptual explanation of estimation, we will teach you about running regression in *R*. Then, we'll use output from these regression models to aid our conceptual explanation of estimation
+
+## Run models using `lm()`
+
+We use the `lm()` function to run linear regression models
+
+- Description
+  - "`lm` is used to fit linear models"
+- syntax (including default values)
+  - `lm(formula, data, subset, weights, na.action, method = "qr", model = TRUE, x = FALSE, y = FALSE, qr = TRUE, singular.ok = TRUE, contrasts = NULL, offset, ...)`
+- selected arguments
+  - `formula`: "an object of class 'formula'" that provides "a symbolic description of the model to be fitted."
+    - follows form `formula = y_var ~ x_var1 + x_var2+ x_var3`
+    - where `y_var` is the outcome variable and `x_var`s are independent variables
+  - `data`: data frame that contains variables named in `formula`
+  - `subset`: "an optional vector specifying a subset of observations to be used in the fitting process."
+  - `na.action`: "a function which indicates what should happen when the data contain NAs"
+    - by default, an observation will be excluded from the model if itcontains missing values for any variable used in the model
+- Value (object created or "returned" by the `lm()` function)
+  - "lm returns an object of class 'lm'"
+  - "An object of class 'lm' is a list containing at least the following components"
+
+Run model of the relationship between reading test score (X) and math test score (Y)
+
+- However, the output printed just by running the `lm()` function usually doesn't contain everything we need
+```{r}
+lm(formula = bytxmstd ~ bytxrstd, data = els)
+```
+
+When you run the `lm()` function, *R* creates an object that contains lots of information about the model we run. We can store this object by assigning it a name using `<-`
+
+- let's store the object
+
+```{r}
+# create object
+mod1 <- lm(formula = bytxmstd ~ bytxrstd, data = els)
+
+# simple print of mod1 object
+mod1
+```
+Let's investigate the contents of the `mod1` object using the `str()` function
+
+- Below output looks rather nasty! let me highlight a few points:
+- the underlying data type of `mod1` is a "list"; data frames are also list
+- `mod1` is a list of 12 elements
+  - each of these 12 elements has a "name", so `mod1` is a "named list"
+- we can refer to elements the object `mod1` using the syntax: `object_name$element_name`
+  - this is the same as when we referred to variables in a data frame using the syntax: `dataframe_name$variable_name`!
+- The first element of `mod1` is named "coefficients", so we could refer to this element by typing `mod1$coefficients`:
+  - `r mod1$coefficients`
+
+```{r}
+# investigate contents of mod1 object using str() function
+mod1 %>% str() 
+```
+
+Let's play around with the element named `coefficients` within the object `mod1` using the syntax `object_name$element_name`
+```{r}
+# names of elements in object mod1
+names(mod1)
+
+# mod1$coefficients
+
+  #print element
+    mod1$coefficients
+    
+  #investigate structure of element
+    # a (named) numeric vector
+    mod1$coefficients %>% str()
+    str(mod1$coefficients) # same same
+
+  # names of element  
+    mod1$coefficients %>% names()
+    names(mod1$coefficients) # same same  
+
+  # length of element
+    mod1$coefficients %>% length()
+    length(mod1$coefficients) # same same  
+
+# so the mod1$coefficients is an object itself; it is a numeric vector of length=2
+  
+  # print the first element of mod1$coefficients
+  mod1$coefficients[1]
+  
+  # print the second element of mod1$coefficients
+  mod1$coefficients[2]
+```
+A key takeaway from above code chunk
+
+- Population linear regression model
+  - $Y_i = \beta_0 + \beta_1X_i + u_i$
+- Our estimate of $\beta_0$ can be found by typing `mod1$coefficients[1]`
+  - `r mod1$coefficients[1]`
+- Our estimate of $\beta_1$ can be found by typing `mod1$coefficients[2]`
+  - `r mod1$coefficients[2]`
+
+##  `summary()` function
+Use the `summary()` after use running `lm()` to produce easier-to-read summary of regression results
+
+- Description
+  - "summary is a generic function used to produce result summaries of the results of various model fitting functions. The function invokes particular methods which depend on the class of the first argumen"
+- syntax
+  - `summary(object, ...)`
+  - examples (these give the same result)
+    - `summary(object = mod1)`
+    - `summary(mod1)`
+- Value (object created or "returned" by the `summary()` function)
+  - object returned by the summary function is different depending on the kind of model you are summarizing
+  
+Run `summary()` function after running regression using `lm()`
+```{r}
+mod1 <- lm(formula = bytxmstd ~ bytxrstd, data = els)
+
+# priting output from summary(mod1)
+  #summary(object = mod1)
+  summary(mod1)
+```
+
+Using `str()` to investigate object created by `summary()` function
+
+- again, the Below output looks rather nasty! let me highlight a few points:
+- the underlying data type of the object created by `summary(mod1)` is a "list"; 
+  - data frames are also list; `mod1` is also a list
+- `summary(mod1)` is a list of 11 elements
+  - each of these 12 elements has a "name", so `summary(mod1)` is a "named list"
+- we can refer to elements the object `summary(mod1)` using the syntax: `object_name$element_name`
+  - e.g., `summary(mod1)$coefficients`
+```{r}
+# investigating object created by summary(mod1)
+summary(mod1) %>% str()
+
+summary(mod1)$coefficients
+
+summary(mod1)$coefficients %>% str()
+```
+
+Grabbing individual elements from `summary(mod1)$coefficients`
+
+- the element "coefficients" created by summary() is a "matrix"
+- more specifically, it is a 2 X 4 matrix, that is a matrix with 2 rows and 4 columns
+- we can grab an individual cell within the matrix using this syntax: `summary(mod1)$coefficients[<row_num>,<col_num]`
+  - e.g., type `summary(mod1)$coefficients[2,1]` to print estimate of $\beta_1$
+  - like this: `r summary(mod1)$coefficients[2,1]`
+```{r}
+# the element "coefficients" created by summary() is a "matrix"
+summary(mod1)$coefficients %>% class()
+
+# more specifically, it is a 2 X 4 matrix, that is a matrix with 2 rows and 4 columns
+summary(mod1)$coefficients %>% str()
+
+# we can grab an individual cell within the matrix using this syntax: 
+  # summary(mod1)$coefficients[<row_num>,<col_num]
+  summary(mod1)$coefficients[2,1] # this is the estimate for Beta_1
+
+```
+## Estimation
+__General things we do in regression analysis__
+
+1. __Estimation__ 
+    - How do we choose estimates of $\beta_0$ and $\beta_1$ using sample data?
+
+2. __Prediction__ 
+    - What is the predicted value of Y for someone with a particular value of X?
+  
+3. __Hypothesis testing__ [focus of the rest of the semester]
+    - Hypothesis testing and confidence intervals about $\beta_1$
+  
+Step 1 of regression is to estimate parameters of the population linear regression model
+
+  - $Y_i = \beta_0 + \beta_1X_i + u_i$
+
+__Goal of estimation: use sample data to estimate population parameters__:
+
+  - Previous lecture: we used sample data on variable $Y$ to estimate population mean, $\mu_Y$
+    - $\bar{Y}$ (sample mean of $Y$) is an estimate of $\mu_Y$
+  - This lecture: use sample data to estimate the population intercept, $\beta_0$, and the population regression coefficient, $\beta_1$
+    - $\hat{\beta_0}$ is an estimate of $\beta_0$
+    - $\hat{\beta_1}$ is an estimate of $\beta_1$
+
+__Review of terms__
+
+- *point estimate (also called "estimate")*:
+  - a single value that is our guess of the value of the population parameter
+  - e.g., sample mean institution-level student debt $\bar{Y}=$ `r round(mean(els$bytxmstd,digits=0))` is our best guess of population mean math test score $\mu_Y$
+- *estimator*:
+  - a method or formula for calculating an estimate of a population parameter based on sample data
+  - e.g., $\bar{Y} = \frac{\sum_{i=1}^{n} Y_i}{n}$ is estimator (formula) for calculating an estimate of population mean, $\mu_Y$
+- *estimation*:
+  - the process of using an estimator to calculate point estimates of population parameters, based on sample data
+
+__Estimation problem__:
+
+- we write out the population linear regression model, $Y_i = \beta_0 + \beta_1X_i + u_i$
+- Need to develop a method for choosing values of $\hat{\beta_0}$ and $\hat{\beta_1}$ 
+  - that is we need to develop an estimator that yields the "best" point estimates of $\hat{\beta_0}$ and $\hat{\beta_1}$
+
+## Estimation (population mean)
+
+We faced a similar estimation problem when we were trying to estimate population mean, $\mu_Y$!
+
+- Using sample data, we want to calculate the "best" estimate of the population mean, $\mu_Y$
+- We decided sample mean, $\bar{Y}= \frac{\sum_{i=1}^{n} Y_i}{n}$, was the "best" estimate
+
+__How did statisticians decide that $\bar{Y}= \frac{\sum_{i=1}^{n} Y_i}{n}$ was "best" estimate of $\mu_Y$? What criteria to make this decision?:__
+
+Imagine that $m$ is all potential estimates for $\mu_Y$
+
+- e.g., $\bar{Y}$ is one potential estimate of $\mu_Y$; the sample median is another potential estimate
+  
+Criteria statisticians used to decide which $m$ is the "best" estimate of $\mu_Y$:
+
+- choose the value, $m$ , that minimizes the "sum of squares"
+- Sum of squares = $\sum_{i=1}^{n}(Y_i-m)^2$
+- Sum of squares in words
+  - for each observation: measures how far away an individual observation $Y_i$ is from estimate $m$; and then square this distance (to remove negative values)
+  - then sum this squared distance across all observations, $Y_i$
+- Conceptually, in choosing "minimize sum of squares" as our criteria for selecting the best estimate of $\mu_Y$, we are "how far off" in total (across all observations) if we can only use a single value to be our guess of the value of each individual observation
+
+Below, we graph scatterplot of reading test score (X) and math test score (Y axis), and add a horizontal line for the mean value of math test score, $\bar{Y}=$ `r round(mean(els$bytxmstd, na.rm = TRUE), digits=0)`
+
+- let's say that $\bar{Y}=$ `r round(mean(els$bytxmstd, na.rm = TRUE), digits=0)` is our "predicted value" for each observation in the scatterplot
+- For each observation $i$, the "residual" $u_i = Y_i - \bar{Y}$ represents how far off our predicted value is from the actual value for that observation
+- $\bar{Y}= \frac{\sum_{i=1}^{n} Y_i}{n}$ is the choice for $m$ that minimizes the sum of squared errors, $\sum_{i=1}^{n}(Y_i-m)^2$
+- in other words, $\bar{Y}$ is the value that minimizes how far off our prediction is in total (across all observations)
+
+```{r}
+els %>% ggplot(aes(x = bytxrstd, y = bytxmstd)) + 
+  geom_point() + 
+  geom_hline(yintercept=mean(els$bytxmstd, na.rm = TRUE), linetype="dashed", color = "red") +
+    labs(subtitle="Reading Test Scores vs. Math Test Scores", 
+       y="Math Test Scores", 
+       x="Reading Test Scores", 
+       title="Scatterplot")
+```
+
+## Regression in R
+
+Population linear regression model
+
+  - $Y_i = \beta_0 + \beta_1X_i + u_i$
+  
+The estimation problem in regression
+
+- Need to develop method for selecting the "best" estimate of $\hat{\beta_0}$ and $\hat{\beta_1}$
+- Solution: do the same thing we did for population mean! Choose the estimates $\hat{\beta_0}$ and $\hat{\beta_1}$ that minimize the sum of squares
+
+```{r, eval = FALSE, include = FALSE}
+els %>% select(stu_id, bytxrstd, bytxmstd)
+```
+
+First some terminology:
+
+- $Y_i$ is the actual observed value of $Y$ for observation $i$
+- $\hat{\beta_0}$ is an estimate of $\beta_0$, population average value of $Y$ when $X=0$
+- $\hat{\beta_1}$ is an estimate of $\beta_1$, the average change in the value of $Y$ associated with a one-unit increase in $X$
+- $\hat{Y_i}$ is the predicted value of $Y_i$, based on sample data!
+  - $\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i$
+  - Example: $\hat{\beta_0}=10,000$ and $\hat{\beta_1}=.75$, then for a university with cost of attendance = $30,000$
+    - $\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i = 10,000 + .75 \times30,000=32,500$
+- Estimated residual, $\hat{u}_i$ is the difference between actual $Y_i$ and predicted $\hat{Y_i}$
+  - $Y_i - \hat{Y_i}$ = $\hat{u_i}$
+  - $Y_i - (\hat{\beta_0} + \hat{\beta_1}X_i)$ = $\hat{u_i}$
+  - Residuals are often called "errors"
+  
+Criteria for choosing "best" estimate of $\hat{\beta_0}$ and $\hat{\beta_1}$
+
+- Select values that minimize "sum of squared residuals"
+- that is, the "best" estimates of  $\hat{\beta_0}$ and $\hat{\beta_1}$ are those that any other alternatives would result in a higher sum of squared residuals
+
+Sum of squared residuals (or sometimes called "sum of squared errors"):
+
+- $\sum_{i=1}^{n}$ $(Y_i - \hat{Y_i})^2$
+
+- $\sum_{i=1}^{n}$ $(Y_i - (\hat{\beta_0} + \hat{\beta_1}X_i))^2$
+
+- $\sum_{i=1}^{n}$ $(u_i)^2$
+
+
+Conceptual explanation for use "sum of squared residuals" as the criteria for choosing values for $\hat{\beta_0}$ and $\hat{\beta_1}$
+
+- Having a y-intercept ($\hat{\beta_0}$) and a slope ($\hat{\beta_1}$) allows us to draw a straight line, our "prediction line"
+- by choosing the values of $\hat{\beta_0}$ and $\hat{\beta_1}$ that minimize the sum of squared residuals, we are creating a linear prediction line that minimizes how far away (in total, across all observations) the predicted values are from the actual values 
+
+Scatterplot of reading test score (X) and math test score (Y)
+
+- red dotted horizontal line for mean of institution-level student debt
+- blue line is the OLS prediction line, associated with values of $\hat{\beta_0}$ and $\hat{\beta_1}$ calculated by *R*, we will cover more in later weeks
+- visually you can see that sum of squared errors would be much larger if we used the mean of institution-level student debt (red line) as the predicted value for every observation
+
+```{r}
+els %>% ggplot(aes(x = bytxrstd, y = bytxmstd)) + geom_point() + 
+  stat_smooth(method = 'lm') +
+  geom_hline(yintercept=mean(els$bytxmstd, na.rm = TRUE), linetype="dashed", color = "red") +
+    labs(subtitle="Reading Test Scores vs. Math Test Scores", 
+       y="Math Test Scores", 
+       x="Reading Test Scores", 
+       title="Scatterplot")
+```  
+
+## Prediction
+
+RQ: What is the effect of reading test score (X) on math test score (Y)? 
+
+__Population Linear Regression Model__
+
+ - $Y_i = \beta_0 + \beta_1X_i + u_i$
+ 
+__OLS Prediction Line or "OLS Regression Line" (based on sample data)__
+
+ - $\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i$ 
+ 
+Let's run regression in R using `lm()` to calculate values for point estimates $\hat{\beta_0}$ and $\hat{\beta_1}$
+
+- $\hat{\beta_0}=$ `r round(summary(mod1)$coefficients[1,1], digits =2)`
+- $\hat{\beta_1}=$ `r round(summary(mod1)$coefficients[2,1], digits =2)`
+```{r}
+mod1 <- lm(formula = bytxmstd ~ bytxrstd, data = els)
+
+summary(mod1)
+
+summary(mod1)$coefficients %>% class()
+
+# more specifically, it is a 2 X 4 matrix, that is a matrix with 2 rows and 4 columns
+summary(mod1)$coefficients %>% str()
+
+# we can grab an individual cell within the matrix using this syntax: 
+  # summary(mod1)$coefficients[<row_num>,<col_num]
+  summary(mod1)$coefficients[1,1] # row 1, column 1; this is the estimate for Beta_0
+  summary(mod1)$coefficients[2,1] # row 2, column 1; this is the estimate for Beta_1
+```
+### Writing out models
+
+When we run a regression model, write out regression models like this (we will be doing this the rest of the quarter):
+
+- Write out the population linear regression model
+  - Label symbols; label what the variables $X$ and $Y$ actually represent
+- OLS prediction line 
+  - write out OLS prediction line without estimate values
+  - write out OLS prediction line with estimate values
+- And usually a good idea to:
+  - write out interpretation of$\hat{\beta_0}$ in words
+  - write out interpretation of$\hat{\beta_1}$ in words
+ 
+- __Population Linear Regression Model__
+  - $Y_i = \beta_0 + \beta_1X_i + u_i$
+  - where:
+    - subscript $i$ refers to universities
+    - $Y_i$: institution-level student debt (in dollars) at university $i$
+    - $X_i$: annual cost of attendance (in dollars) for full-time resident graduate students at university $i$
+    - $\beta_0$: population intercept, average value of $Y$ when $X=0$    
+    - $\beta_1$: population regression coefficient, the average change in the value of $Y$ associated with a one-unit increase in $X$
+  - __OLS Prediction Line or "OLS Regression Line" (based on sample data)__
+   - $\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i$   
+   - $\hat{Y_i} =$  `r round(summary(mod1)$coefficients[1,1], digits =2)` + `r round(summary(mod1)$coefficients[2,1], digits =2)` $\times X_i$
+
+Once you write it out like this, easy to answer questions about your regression model
+
+- Predict the the expected math test score for a student who has a reading test score of 40? That is, what is $E(\hat{Y_i}|X=40)$?
+
+  - $E(\hat{Y_i}|X=40) = \hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i=$ `r round(summary(mod1)$coefficients[1,1], digits =2)` + `r round(summary(mod1)$coefficients[2,1], digits =2)` $\times 40$ = `r round(summary(mod1)$coefficients[1,1] + summary(mod1)$coefficients[2,1]*40, digits=0)`
+  
+- Predict the the expected math test score for a student who has a reading test score of 70? That is, what is $E(\hat{Y_i}|X=70)$?
+  - $E(\hat{Y_i}|X=70) = \hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i=$ `r round(summary(mod1)$coefficients[1,1], digits =2)` + `r round(summary(mod1)$coefficients[2,1], digits =2)` $\times 70$ = `r round(summary(mod1)$coefficients[1,1] + summary(mod1)$coefficients[2,1]*70, digits=0)`
+
+Interpreting $\hat{\beta_0}$ and $\hat{\beta_1}$ in words
+
+- $\hat{\beta_0}=$ `r round(summary(mod1)$coefficients[1,1], digits =2)` is the OLS estimate of the population intercept $\beta_0$, which represents average value of $Y$ (math test score) for a student with X=0 (reading test score = 0)
+  - interpretation of $\hat{\beta_0}=$ `r round(summary(mod1)$coefficients[1,1], digits =2)`: the predicted math test score for a student with a reading test score of `0` is `r round(summary(mod1)$coefficients[1,1], digits =2)`
+- $\hat{\beta_1}=$ `r round(summary(mod1)$coefficients[2,1], digits =2)` is the OLS estimate of the population intercept $\beta_1$, which represents average effect of a one-unit increase in $X$ on the value of $Y$
+  - General formula for interpretation of $\hat{\beta_1}$:
+    - "On average, a one-unit increase in $X$ is associated with a $\hat{\beta_1}$ increase (or decrease) in the value of $Y$
+    - when applying this formula replace "one unit increase in $X$" with "one test score increase in reading test score"; do the same sort of thing for $Y$
+  - interpretation of $\hat{\beta_1}=$ `r round(summary(mod1)$coefficients[2,1], digits =2)`: a test score increase in reading test score is associated with a `r round(summary(mod1)$coefficients[2,1], digits =2)` a test score increase in math test score
+
+
+
