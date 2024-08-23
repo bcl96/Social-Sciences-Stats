@@ -1,0 +1,389 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 8.1 Bivariate Regression, Part II"
+format: pdf
+editor: source
+---
+Week 8: Learning goal - Apply understanding of bivariate regression to do hypothesis testing for continuous variables. 
+
+ 
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+Lecture overview:
+
+- Model Fit
+  - $R^2$, the coefficient of determination
+- Standard Error of the of the Regression (SER)
+
+Load packages:
+```{r, eval=TRUE}
+library(tidyverse)
+library(ggplot2)
+library(haven)
+
+load(url('https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/els/output_data/els_stu.RData'))
+
+# ELS data frames
+els <- df_els_stu_allobs_fac
+```
+
+## Model Fit
+
+Where we left off last week:
+
+- Research question
+  - What is the relationship between reading test score ($X$) on math test score ($Y$)?
+- Population Linear Regression Model
+  - $Y_i = \beta_0 + \beta_1X_i + u_i$
+  - where:
+    - subscript $i$ refers to students
+    - $Y_i$: math test score for student $i$
+    - $X_i$: reading test score for student $i$
+    - $\beta_0$: population intercept, average value of $Y$ when $X=0$    
+    - $\beta_1$: population regression coefficient, the average change in the value of $Y$ associated with a one-unit increase in $X$    
+- OLS Prediction Line (based on sample data) $\hat{Y_i}$ is predicted value $Y_i$ for a given value of $X$
+   - $\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i$
+   - $\hat{Y_i} =$  `r round(summary(mod1)$coefficients[1,1], digits =2)` + `r round(summary(mod1)$coefficients[2,1], digits =2)` $\times X_i$
+
+In the summary of the regression output below, notice the following:
+
+- "Multiple R-squared:" `r round(summary(mod1)$r.squared,digits =4)`
+```{r, eval = TRUE}
+mod1 <- lm(formula = bytxmstd ~ bytxrstd, data = els)
+summary(mod1)
+
+# Print r-squared using summary object
+summary(mod1)$r.squared
+```
+
+__What does $R^2$ measure?__
+
+- $R^2$, "the coefficient of determination", measures the fraction of the variance in Y that is explained by X (and is not already explained by sample mean, $\bar{Y}$)
+  - In other words, how much better is the regression model in predicting values of Y than $\bar{Y}$
+
+Looking at the below scatterplot of reading test score ($X$) and math test score ($Y$); with mean value of math test score as horizontal dotted line and OLS prediction line as solid blue line
+
+- $R^2$, "the coefficient of determination", measures how much closer the predicted values of $\hat{Y_i}$ are to actual values $Y_i$ when we use OLS prediction line to predict $Y_i$ (i.e., $\hat{Y_i}=\hat{\beta_0} + \hat{\beta_1}X_i$), rather than using sample mean $\bar{Y}$ to predict $Y_i$ (i.e., $\hat{Y_i}=\bar{Y}$)
+```{r}
+els %>% ggplot(aes(x = bytxrstd, y = bytxmstd)) + geom_point() + 
+  stat_smooth(method = 'lm') +
+  geom_hline(yintercept=mean(els$bytxmstd, na.rm = TRUE), linetype="dashed", color = "red") +
+    labs(subtitle="Reading Test Scores vs. Math Test Scores", 
+       y="Math Test Scores", 
+       x="Reading Test Scores", 
+       title="Scatterplot")
+```  
+
+__Interpreting $R^2$__
+
+- $R^2$ ranges from 0 to 1
+  - $R^2=0$: "the model does not explain any variation in Y" (that is not already explained by sample mean, $\bar{Y}$)
+  - $R^2=1$: "the model explains 100% of the variation in Y" (that is not already explained by sample mean, $\bar{Y}$)
+  - $R^2=0.135$: "the model explains 13.5% of the variation in Y" (that is not already explained by sample mean, $\bar{Y}$)
+
+__Formula for $R^2$__
+
+$R^2 = \frac{\text{variance in Y that is explained by X}}{\text{total variance in Y}} = \frac{\text{Explained Sum of Squares}}{\text{Total Sum of Squares}} =  \frac{ESS}{TSS}$
+
+OR
+
+$R^2 = 1- \frac{\text{variance in Y that not explained explained by X}}{\text{total variance in Y}} = 1-  \frac{\text{Sum of Squared Residuals}}{\text{Total Sum of Squares}} = 1-  \frac{SSR}{TSS}$
+
+### Components of $R^2$
+
+- $\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i$
+  - predicted value of $Y_i$ for a given value of $X$
+
+- $\hat{u_i} = Y_i - \hat{Y_i}$
+  - residual or "error" for observation $i$; equals observed value $Y_i$ minus predicted value $\hat{Y_i}$
+
+
+- Total Sum of Squares (TSS) = $\sum_{i=1}^{n} (Y_i-\bar{Y})^2$
+  - A measure of the total variance in Y, relative to $\bar{Y}$
+  
+- Explained Sum of Squares (ESS) = $\sum_{i=1}^{n} (\hat{Y_i}-\bar{Y})^2$
+  - Difference between predicted values $\hat{Y_i}$ and sample mean $\bar{Y}$
+  - Measures amount of variation in Y explained by X
+  
+- Sum of Squared Residuals (SSR) = $\sum_{i=1}^{n} (Y_i- \hat{Y_i})^2$
+  - Difference between actual value observed and predicted value by our regression line
+  - Measures amount of variation in Y not explained by X
+  
+$TSS = ESS + SSR$
+
+- Total variation in Y (TSS) equals variation explained by the model (ESS) plus variation not explained by model (SSR)
+- Use visual plot explain TSS, ESS, SSR
+
+```{r}
+els %>% ggplot(aes(x = bytxrstd, y = bytxmstd)) + geom_point() + 
+  stat_smooth(method = 'lm') +
+  geom_hline(yintercept=mean(els$bytxmstd, na.rm = TRUE), linetype="dashed", color = "red") +
+    labs(subtitle="Reading Test Scores vs. Math Test Scores", 
+       y="Math Test Scores", 
+       x="Reading Test Scores", 
+       title="Scatterplot")
+```  
+
+#### Calculating $R^2$ by hand
+
+__Calculating $\bar{Y}$, $\hat{Y}_i$, and $\hat{u}_i$__
+
+- Predicted value for each $i$: 
+  - $\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i=$  `r round(summary(mod1)$coefficients[1,1], digits =2)` + `r round(summary(mod1)$coefficients[2,1], digits =2)` $\times X_i$
+- Residual (or "error") for each $i$: 
+  - $\hat{u_i} = Y_i - \hat{Y}_i =  Y_i - (\hat{\beta_0} + \hat{\beta_1}X_i) = Y_i -$  (`r round(summary(mod1)$coefficients[1,1], digits =2)` + `r round(summary(mod1)$coefficients[2,1], digits =2)` $\times X_i$)
+
+```{r}
+#summary(mod1) %>% str()
+
+# mean value of y for each i
+ybar <- mean(els$bytxmstd, na.rm = TRUE)
+ybar
+
+# predicted values for each y_i
+yhat_i <- summary(mod1)$coefficients[1,1] + summary(mod1)$coefficients[2,1]*els$bytxrstd
+
+# residual for each Y_i
+u_i <- els$bytxmstd - yhat_i
+```
+
+__Calculating TSS, ESS, and SSR__
+
+- Total Sum of Squares (TSS) = $\sum_{i=1}^{n} (Y_i-\bar{Y})^2$
+  - A measure of the total variance in Y, relative to $\bar{Y}$
+  - total sum of squares = `r format(round(sum((els$bytxmstd - ybar)^2, na.rm = TRUE), digits=0),big.mark = ',')`
+- Explained Sum of Squares (ESS) = $\sum_{i=1}^{n} (\hat{Y_i}-\bar{Y})^2$
+  - Difference between predicted values $\hat{Y_i}$ and sample mean $\bar{Y}$
+  - Measures amount of variation in Y explained by X
+  - explained sum of squares = `r format(round(sum((yhat_i - ybar)^2, na.rm = TRUE), digits=0),big.mark = ',')`
+- Sum of Squared Residuals (SSR) = $\sum_{i=1}^{n} (Y_i- \hat{Y_i})^2$
+  - Difference between actual value observed and predicted value by our regression line
+  - Measures amount of variation in Y not explained by X
+  - sum of squared residuals = `r format(round(sum((els$bytxmstd - yhat_i)^2, na.rm = TRUE), digits=0),big.mark = ',')`
+  - or calculate SSR as $\sum_{i=1}^{n} (\hat{u_i})^2=$ `r format(round(sum((u_i)^2, na.rm = TRUE), digits=0),big.mark = ',')`
+  
+```{r}
+# total sum of squares (TSS)
+tss <- sum((els$bytxmstd - ybar)^2, na.rm = TRUE)
+tss
+
+# Explained sum of squares (ESS)
+ess <- sum((yhat_i - ybar)^2, na.rm = TRUE)
+ess
+
+# Sum of squared residuals (SSR)
+ssr <- sum((els$bytxmstd - yhat_i)^2, na.rm = TRUE)
+ssr
+
+  # or calculate this way, based on u_i
+  sum(u_i^2)
+```
+__Calculating $R^2$__
+
+$R^2$ as ESS/TSS
+
+- $R^2 = \frac{\text{variance in Y that is explained by X}}{\text{total variance in Y}} =  \frac{ESS}{TSS}=$ (`r format(round(sum((yhat_i - ybar)^2, na.rm = TRUE), digits=0),big.mark = ',')`)/(`r format(round(sum((els$bytxmstd - ybar)^2, na.rm = TRUE), digits=0),big.mark = ',')`) = `r format(round(sum((yhat_i - ybar)^2, na.rm = TRUE)/sum((els$bytxmstd - ybar)^2, na.rm = TRUE), digits=4),big.mark = ',')`
+
+
+```{r}
+# calculating R^2 as ESS/TSS
+  #sum((yhat_i - ybar)^2, na.rm = TRUE)/sum((els$bytxmstd - ybar)^2, na.rm = TRUE)
+  ess/tss
+
+```
+
+
+OR
+
+$R^2$ as 1 - SSR/TSS
+
+- $R^2 = 1- \frac{\text{variance in Y that not explained explained by X}}{\text{total variance in Y}} =  1-  \frac{SSR}{TSS}=1-$ (`r format(round(sum((u_i)^2, na.rm = TRUE), digits=0),big.mark = ',')`)/(`r format(round(sum((els$bytxmstd - ybar)^2, na.rm = TRUE), digits=0),big.mark = ',')`) = `r format(round(1 - sum((els$bytxmstd - yhat_i)^2, na.rm = TRUE)/sum((els$bytxmstd - ybar)^2, na.rm = TRUE), digits=4),big.mark = ',')`
+
+
+```{r}
+# calculating R^2 as (1- SSR/TSS)
+  #1 - sum((els$bytxmstd - yhat_i)^2, na.rm = TRUE)/sum((els$bytxmstd - ybar)^2, na.rm = TRUE)
+  1 - ssr/tss
+
+```
+
+#### Calculating $R^2$ in *R*
+
+$R^2 = \frac{\text{variance in Y that is explained by X}}{\text{total variance in Y}} =  \frac{ESS}{TSS}=$
+
+- Note that in R:
+
+  - `summary()` will only give you the $R^2$
+  - `anova()` will give you ESS and SSR (but not TSS)
+
+Using `summary()` to calculate $R^2$
+
+- "Multiple R-squared:" `r round(summary(mod1)$r.squared,digits =4)`
+```{r}
+summary(mod1)
+```
+
+Using `anova()` to calculate $R^2$
+
+- Estimated sum of squares (ESS) = `r format(round(anova(mod1)$"Sum Sq"[1], digits=4),big.mark = ',')`
+- Sum of Squared Residuals (SSR) = `r format(round(anova(mod1)$"Sum Sq"[2], digits=4),big.mark = ',')`
+- Total Sum of Squares (TSS) = ESS + SSR = `r format(round(anova(mod1)$"Sum Sq"[1] +anova(mod1)$"Sum Sq"[2], digits=4),big.mark = ',')`
+- $R^2 = \frac{ESS}{TSS}=$ (`r format(round(anova(mod1)$"Sum Sq"[1], digits=4),big.mark = ',')`)/(`r format(round(anova(mod1)$"Sum Sq"[1] +anova(mod1)$"Sum Sq"[2], digits=4),big.mark = ',')`) = `r format(round(anova(mod1)$"Sum Sq"[1]/(anova(mod1)$"Sum Sq"[1] + anova(mod1)$"Sum Sq"[2]), digits=4),big.mark = ',')`
+
+```{r}
+anova(mod1)
+
+anova(mod1) %>% str()
+
+# this 2-element vector contains ESS and SSR
+anova(mod1)$"Sum Sq"
+
+# ESS
+anova(mod1)$"Sum Sq"[1]
+
+# SSR
+anova(mod1)$"Sum Sq"[2]
+
+# TSS
+anova(mod1)$"Sum Sq"[1] + anova(mod1)$"Sum Sq"[2]
+
+# R squared
+anova(mod1)$"Sum Sq"[1]/(anova(mod1)$"Sum Sq"[1] + anova(mod1)$"Sum Sq"[2])
+```
+
+## Standard Error of the of the Regression (SER)
+Denoted as SER or $\hat{\sigma}_{\hat{u}}$ or $s_{\hat{u}}$
+
+- SER an estimate of the standard deviation of the residuals $\hat{u_i}$
+- Definition
+  - Sample standard error of the regression (SER) is an estimate of how far away, on average, an actual observed value of $Y_i$ is from the predicted value $\hat{Y}_i$ of $Y_i$ for a random observation, $i$
+
+__Comparison of sample standard deviation $\hat{\sigma}_{Y}$ and SER__
+
+- Sample standard deviation of $Y$, denoted $\hat{\sigma}_{Y}$ or $s_{Y}$
+  - Average distance between a random observation $Y_i$ an the sample mean $\bar{Y}$
+  - $\hat{\sigma_{Y}} = s_{Y} =  \sqrt{ \frac {\sum_{i=1}^{n} ({Y_{i} -\overline{Y})^2}} {n-1} }$
+
+- Standard error of the regression, denoted SER or $\hat{\sigma}_{\hat{u}}$ or $s_{\hat{u}}$
+  - Average distance between a random observation $Y_i$ and the value predicted by the OLS regression, $\hat{Y_i}$
+  - where, $\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i$
+
+__Formula for SER__
+
+- $SER = \sqrt{\frac{SSR}{n-2}}= \sqrt{ \frac {\sum_{i=1}^{n} ({Y_{i} -\hat{Y})^2}} {n-2} } = \sqrt{ \frac {\sum_{i=1}^{n} (\hat{u_{i}})^2} {n-2}}$
+- where, SSR = sum of squared residuals
+- Why is denominator (n-2)? 
+  - Because we lose one "degree of freedom" for calculating sample mean $\bar{Y}$ and another for the independent variable $X$
+
+__SER is called "Residual Standard Error" in output of `summary()`__
+
+- "Residual Standard Error": `r summary(mod1)$sigma`
+- using the syntax `object_name$element_name`, SER can be referenced by: `summary(mod1)$sigma`
+
+```{r}
+mod1 <- lm(formula = bytxmstd ~ bytxrstd, data = els)
+
+summary(mod1)
+
+# this syntax references SER
+summary(mod1)$sigma
+```
+
+__Calculating SER__
+
+$SER = \sqrt{\frac{SSR}{n-2}}= \sqrt{ \frac {\sum_{i=1}^{n} ({Y_{i} -\hat{Y}_i)^2}} {n-2} } = \sqrt{ \frac {\sum_{i=1}^{n} (\hat{u_{i}})^2} {n-2}}$
+
+can calculate SER using output from `anova()` function, which provides SSR
+
+- Sum of Squared Residuals (SSR)
+  - syntax to find SSR in R: `anova(mod1)$"Sum Sq"[2]`
+  - SSR = `r format(round(anova(mod1)$"Sum Sq"[2], digits=4),big.mark = ',')`
+- denominator of SER is $n-2$, which is the "degrees of freedom" of the model
+  - syntax to find degrees of freedom: `anova(mod1)$Df[2]`
+  - degrees of freedom: `r anova(mod1)$Df[2]`
+- $SER = \sqrt{\frac{SSR}{n-2}}=$ `sqrt(` (`r format(round(anova(mod1)$"Sum Sq"[2], digits=4),big.mark = ',')`)/(`r anova(mod1)$Df[2]`) `)` = `r sqrt(anova(mod1)$"Sum Sq"[2]/anova(mod1)$Df[2])`
+```{r}
+anova(mod1)
+
+# Sum of squared residuals
+anova(mod1)$"Sum Sq"[2]
+
+# denominator of SER is DF of sum of squared residuals
+anova(mod1)$Df[2]
+
+# SER
+sqrt(anova(mod1)$"Sum Sq"[2]/anova(mod1)$Df[2])
+
+#format(round(sqrt(anova(mod1)$"Sum Sq"[2]/anova(mod1)$Df[2]), digits=4),big.mark = ',')
+```
+
+__Interpreting SER__
+
+
+Recall we have:
+
+- Research question
+  - What is the relationship between reading test score ($X$) on math test score ($Y$)?
+- Population Linear Regression Model
+  - $Y_i = \beta_0 + \beta_1X_i + u_i$
+  - where:
+    - subscript $i$ refers to students
+    - $Y_i$ = math test score for student $i$
+    - $X_i$ = reading test score for student $i$
+- OLS Prediction Line (based on sample data) $\hat{Y_i}$ is predicted value $Y_i$ for a given value of $X$
+   - $\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i$
+   - $\hat{Y_i} =$  `r round(summary(mod1)$coefficients[1,1], digits =2)` + `r round(summary(mod1)$coefficients[2,1], digits =2)` $\times X_i$
+
+
+$SER = \sqrt{\frac{SSR}{n-2}}=$ `r format(round(summary(mod1)$sigma, digits=0),big.mark = ',')`
+
+- general definition of SER:
+  - Sample standard error of the regression (SER) is an estimate of how far away, on average, an actual observed value of $Y_i$ is from the predicted value $\hat{Y}_i$ of $Y_i$ for a random observation, $i$
+- Interpretation of SER = `r format(round(summary(mod1)$sigma, digits=0),big.mark = ',')`
+  - On average, observed values of math test score ($Y_i$) are `r format(round(summary(mod1)$sigma, digits=0),big.mark = ',')` test scores away from predicted values of math test scores $\hat{Y}_i$
+- in general, higher values of SER mean that our predicted OLS line is off by a lot
+
+Comparison of SER to sample standard deviation of $Y$, $\hat{\sigma}_Y$
+
+- sample standard deviation: $\hat{\sigma}_Y=$ `r format(round(sd(els$bytxmstd, na.rm = TRUE), digits=0),big.mark = ',')`
+  - On average, observations of $Y_i$ are `r format(round(sd(els$bytxmstd, na.rm = TRUE), digits=0),big.mark = ',')` dollars away from the sample mean $\bar{Y}$ of $Y$
+- Sample standard error of the regression: $SER =$ `r format(round(summary(mod1)$sigma, digits=0),big.mark = ',')`
+  - On average, observed values of $Y_i$ are `r format(round(summary(mod1)$sigma, digits=0),big.mark = ',')` dollars away from predicted values $\hat{Y}_i$
+- so it seems like our regression model is doing a substantially better job of predicting values of math test score than the mean value of math test score
+
+```{r}
+# standard deviation of Y
+sd(els$bytxmstd, na.rm = TRUE)
+
+# Standard error of the regression
+summary(mod1)$sigma
+```
+
+__Comments on SER and $R^2$__
+
+$R^2$
+
+- Low $R^2$ tell us that the model does not explain much of the variation in the dependent variable; there are other factors (not included in the model) that explain most of the variation in the dependent variable
+- Low $R^2$ is not necessarily bad and a high $R^2$ is not necessarily good (e.g., predicting provery from having a cell phone has a very high $R^2$)
+
+$SER$
+
+- High SER tells us  that our predictions will often be wrong by a lot; but that does not necessarily mean our model is bad given some things are hard to predict and we often are interested in "averages"!
+
+
+Econometrics Research & Model Fit
+
+- Usually we're most concerned with estimating $\beta_1$, which is the "causal effect" of X on Y
+- Models with high $R^2$ and low SER may still be wrong about $\beta_1$ 
+
+
+
+
+
+
+
+
