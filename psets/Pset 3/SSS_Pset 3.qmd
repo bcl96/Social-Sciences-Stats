@@ -1,0 +1,234 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Pset 3: Due MONTH, DATE, YEAR at 11:59pm"
+author: "Belle Lee"
+date: "06.15.24"
+format: pdf
+editor: source
+---
+
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Overview 
+
+Welcome to your third pset of the course. This problem set is intended to give you some practice becoming familiar with descriptive statistics. In this problem set, we are asking you to: create an R project, render your file, load and investigate an R data frame that is stored on the web, and apply some basic functions to better understand distributions.
+
+- Note: Change the values of the YAML header above to your name and the date. 
+
+## Question 1: Creating an R project
+
+**Create an R project**  
+
+- Create a folder where you want to save files associated with problem set 3. Let's call that folder "problemset3", but you can name it whatever you want.
+  - For instance, it could be SSS >> problem_sets >> problemset3.
+- In RStudio, click on "File" >> "New Project" >> "Existing Directory" >> "Browse".
+- Browse to find and select your problem set 3 folder.
+- Click on "Create Project".
+  - An R project file has the extension ".Rproj".
+  - The name of the file should be "problemset3.Rproj", or whatever you named the folder.
+
+Save this problemset2.qmd file anywhere in the folder named problemset3.
+
+- At the top of this .qmd file, type in your first and last name in the appropriate place in the YAML header (e.g. "Belle Lee").
+- in the date field of the YAML header, insert the date within quotations (any date format is fine).
+- Now click the "Render" button near the top of your RStudio window (icon with blue arrow sign) or drop down "File" and select "Render Document".
+  - Alternatively you can use the shortcut: __Cmd/Ctrl + Shift + k__.
+
+  - *Note*: One goal of this assignment is to make sure you are able to render without running into errors.
+  
+## Question 2: Hypothesis Testing
+
+1. If you do not know the true value of a population parameter, can you still make a hypothesis?
+
+**ANSWER:**
+
+
+2. Explain what an alternative hypothesis is. You may provide an example of an alternative hypothesis in relation to a null hypothesis. 
+
+**ANSWER:**
+
+
+
+## Question 3: Components of a T-test
+
+1. Explain the logic of a test statistic, what would it calculate?
+
+**ANSWER:**
+
+
+
+2. What are the components of a t-test?
+
+**ANSWER:**
+
+
+3. Load the ipeds data below from the course website.
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(labelled)
+library(patchwork)
+
+# Load ipeds dataset from course website
+load(url('https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/ipeds/output_data/panel_data.RData'))
+
+# Create ipeds data frame with fewer variables/observations
+df_ipeds_pop <- panel_data %>%
+  # keep data from fall 2022
+  filter(year == 2022) %>%
+  # which universities to keep:
+    # 2015 carnegie classification: keep research universities (15,16,17) and master's universities (18,19,20)
+  filter(c15basic %in% c(15,16,17,18,19,20)) %>%
+  # which variables to keep
+  select(instnm,unitid,opeid6,opeid,control,c15basic,stabbr,city,zip,locale,obereg, # basic institutional characteristics
+         tuition6,fee6,tuition7,fee7, # avg tuition and fees for full-time grad, in-state and out-of-state
+         isprof3,ispfee3,osprof3,ospfee3, # avg tuition and fees for MD, in-state and out-of-state
+         isprof9,ispfee9,osprof9,ospfee9, # avg tuition and fees for Law, in-state and out-of-state
+         chg4ay3,chg7ay3,chg8ay3) %>% # [undergraduate] books+supplies; off-campus (not with family) room and board; off-campus (not with family) other expenses
+  # rename variables; syntax <new_name> = <old_name>
+  rename(region = obereg, # revion
+         tuit_grad_res = tuition6, fee_grad_res = fee6, tuit_grad_nres = tuition7, fee_grad_nres = fee7, # grad
+         tuit_md_res = isprof3, fee_md_res = ispfee3, tuit_md_nres = osprof3, fee_md_nres = ospfee3, # md
+         tuit_law_res = isprof9, fee_law_res = ispfee9, tuit_law_nres = osprof9, fee_law_nres = ospfee9, # law
+         books_supplies = chg4ay3, roomboard_off = chg7ay3, oth_expense_off = chg8ay3) %>% # [undergraduate] expenses
+  # create measures of tuition+fees
+  mutate(
+    tuitfee_grad_res = tuit_grad_res + fee_grad_res, # graduate, state resident
+    tuitfee_grad_nres = tuit_grad_nres + fee_grad_nres, # graduate, non-resident
+    tuitfee_md_res = tuit_md_res + fee_md_res, # MD, state resident
+    tuitfee_md_nres = tuit_md_nres + fee_md_nres, # MD, non-resident
+    tuitfee_law_res = tuit_law_res + fee_law_res, # Law, state resident
+    tuitfee_law_nres = tuit_law_nres + fee_law_nres) %>% # Law, non-resident  
+  # create measures of cost-of-attendance (COA) as the sum of tuition, fees, book, living expenses
+  mutate(
+    coa_grad_res = tuit_grad_res + fee_grad_res + books_supplies + roomboard_off + oth_expense_off, # graduate, state resident
+    coa_grad_nres = tuit_grad_nres + fee_grad_nres + books_supplies + roomboard_off + oth_expense_off, # graduate, non-resident
+    coa_md_res = tuit_md_res + fee_md_res + books_supplies + roomboard_off + oth_expense_off, # MD, state resident
+    coa_md_nres = tuit_md_nres + fee_md_nres + books_supplies + roomboard_off + oth_expense_off, # MD, non-resident
+    coa_law_res = tuit_law_res + fee_law_res + books_supplies + roomboard_off + oth_expense_off, # Law, state resident
+    coa_law_nres = tuit_law_nres + fee_law_nres + books_supplies + roomboard_off + oth_expense_off) %>% # Law, non-resident    
+  # keep only observations that have non-missing values for the variable coa_grad_res
+    # this does cause us to lose some interesting universities, but doing this will eliminate some needless complications with respect to learning core concepts about statistical inference
+  filter(!is.na(coa_grad_res))
+
+# Add variable labels to the tuit+fees variables and coa variables
+  # tuition + fees variables
+    var_label(df_ipeds_pop[['tuitfee_grad_res']]) <- 'graduate, full-time, resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_grad_nres']]) <- 'graduate, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_res']]) <- 'MD, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_nres']]) <- 'MD, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_res']]) <- 'Law, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_nres']]) <- 'Law, full-time, non-resident; avg tuition + required fees'
+    
+  # COA variables
+    var_label(df_ipeds_pop[['coa_grad_res']]) <- 'graduate, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_grad_nres']]) <- 'graduate, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_res']]) <- 'MD, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_nres']]) <- 'MD, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_res']]) <- 'Law, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_nres']]) <- 'Law, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+
+df_ipeds_pop %>% glimpse()
+
+##########
+########## Create data frame of generated variables, with each variable meant to represent the entire population
+##########
+
+
+num_obs <- 10000
+
+# Generate normal distribution w/ custom mean and sd
+set.seed(124)
+norm_dist <- rnorm(n = num_obs, mean = 50, sd = 5)
+
+# Generate right-skewed distribution
+set.seed(124)
+rskew_dist <- rbeta(n = num_obs, shape1 = 2, shape2 = 5)
+
+# Generate left-skewed distribution
+set.seed(124)
+lskew_dist <- rbeta(n = num_obs, shape1 = 5, shape2 = 2)
+
+# Generate standard normal distribution (default is mean = 0 and sd = 1)
+set.seed(124)
+stdnorm_dist <- rnorm(n = num_obs, mean = 0, sd = 1)  # equivalent to rnorm(10)
+
+# Create dataframe
+df_generated_pop <- data.frame(norm_dist, rskew_dist, lskew_dist, stdnorm_dist)
+
+# drop individual objects associated with each variable
+rm(norm_dist,rskew_dist,lskew_dist,stdnorm_dist)
+rm(num_obs)
+
+
+##########
+########## Create sample versions of generated population data frame and IPEDS population data frame
+##########
+
+# create sample version of our generated data
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_generated_sample <- df_generated_pop %>% sample_n(size = 200)
+  df_generated_sample %>% glimpse()
+
+
+# create sample version of our ipeds data
+
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_ipeds_sample <- df_ipeds_pop %>% sample_n(size = 200) 
+  
+  # compare mean of coa_grad_res between population and sample
+  mean(df_ipeds_pop$coa_grad_res, na.rm = TRUE)
+  mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE)
+```
+
+4. Let's investigate the in-state fees for full-time graduate students in `df_ipeds_sample`. If the following is our null hypothesis, please state in words the alternative hypothesis
+
+Null hypothesis $H_0$
+  - (in words) $H_0:$ the population mean cost of in-state fees for full-time (resident) graduate students, $\mu_Y$, is $800.
+  
+**ANSWER:**
+
+
+5. Calculate the t-test value by hand
+```{r}
+
+
+```
+
+6. Calculate the t-test value by function
+```{r}
+
+```
+7. Did you get the same t-test value by hand and by function? What does this t-test value tell us? What would we need to know if this is statistically significant? 
+
+**ANSWER:**
+
+
+
+## Question 4: Comparing Two Groups
+
+1. What does a p-value represent?
+
+**ANSWER:**
+
+
+
+2. What happens when we have a p-value that is less than an alpha level of 0.05?
+
+**ANSWER:**
+
+
+
+
+# Render to pdf and submit problem set 
+
+**Render to pdf** by clicking the "Render" button near the top of your RStudio window (icon with blue arrow) or drop down "File" and select "Render to PDF"
+
+- Go to the [class website] (Need to fill in classwebsite) and under the "Readings & Assignments" >> "Week 1" tab, click on the "Problem set 1 submission link"  
+- Submit both .qmd and pdf files  
+- Use this naming convention "lastname_firstname_ps#" for your .qmd and pdf files (e.g. lee_belle_ps1.qmd & lee_belle_ps1.pdf)  
