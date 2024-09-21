@@ -1,0 +1,300 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Pset 4: Due MONTH, DATE, YEAR at 11:59pm"
+author: "Belle Lee"
+date: "06.15.24"
+format: pdf
+editor: source
+---
+
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+
+# Overview 
+
+Welcome to your fourth and last pset of the course. This problem set is intended to give you some practice becoming familiar with regression. In this problem set, we are asking you to: create an R project, render your file, load and investigate an R data frame that is stored on the web, and apply some basic functions to better understand distributions.
+
+- Note: Change the values of the YAML header above to your name and the date. 
+
+## Question 1: Creating an R project
+
+**Create an R project**  
+
+- Create a folder where you want to save files associated with problem set 4. Let's call that folder "problemset4", but you can name it whatever you want.
+  - For instance, it could be SSS >> problem_sets >> problemset3.
+- In RStudio, click on "File" >> "New Project" >> "Existing Directory" >> "Browse".
+- Browse to find and select your problem set 4 folder.
+- Click on "Create Project".
+  - An R project file has the extension ".Rproj".
+  - The name of the file should be "problemset4.Rproj", or whatever you named the folder.
+
+Save this problemset4.qmd file anywhere in the folder named problemset4.
+
+- At the top of this .qmd file, type in your first and last name in the appropriate place in the YAML header (e.g. "Belle Lee").
+- in the date field of the YAML header, insert the date within quotations (any date format is fine).
+- Now click the "Render" button near the top of your RStudio window (icon with blue arrow sign) or drop down "File" and select "Render Document".
+  - Alternatively you can use the shortcut: __Cmd/Ctrl + Shift + k__.
+
+  - *Note*: One goal of this assignment is to make sure you are able to render without running into errors.
+  
+## Question 2: Bivariate Regression
+
+1. Describe what it means if the relationship between X and Y is negative? Provide an example.
+
+**ANSWER:**
+
+**ANSWER KEY:**
+When X and Y have a negative relationship, X is "high" and Y is "low" or X is "low" and Y is "high". Example from lecture 7.1 is school absences and GPA. 
+
+2. What is a residual? 
+
+**ANSWER:**
+
+**ANSWER KEY:**
+Residual is the difference between actual observed value of Y and predicted value of Y (given X). The predicted value of Y for a given value of X is represented by the “prediction line” above.
+
+3. What is covariance? What is correlation?  
+
+**ANSWER:**
+
+**ANSWER KEY:**
+Covariance measures the extent to which two variables move together in a linear relationship. Correlation measures both the strength and direction of the relationship between two variables. 
+
+4. Would you determine the following values of correlation as weak, moderate, or strong?
+
+a. 0.15 
+b. -0.8
+c. 0.77
+d. 0.46
+
+**ANSWER:**
+
+**ANSWER KEY:**
+a. weak
+b. strong
+c. strong
+d. moderate
+
+## Question 3: SER
+
+1. What is SER? What does a high SER mean? Should we be concerned?
+
+**ANSWER:**
+
+**ANSWER KEY:**
+Sample standard error of the regression (SER) is an estimate of how far away, on average, an actual observed value of $Y_i$ is from the predicted value $\hat{Y}_i$ of $Y_i$ for a random observation, $i$. High SER tells us  that our predictions will often be wrong by a lot; but that does not necessarily mean our model is bad given some things are hard to predict and we often are interested in "averages".
+
+2. Using the syntax for "Residual Standard Error", what is the syntax to reference SER in r? 
+
+**ANSWER:**
+
+**ANSWER KEY:**
+Using the syntax `object_name$element_name`, SER can be referenced by: `summary(mod1)$sigma`
+
+## Question 4: Regression
+1. Load the ipeds data below from the course website.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(labelled)
+library(patchwork)
+
+# Load ipeds dataset from course website
+load(url('https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/ipeds/output_data/panel_data.RData'))
+
+# Create ipeds data frame with fewer variables/observations
+df_ipeds_pop <- panel_data %>%
+  # keep data from fall 2022
+  filter(year == 2022) %>%
+  # which universities to keep:
+    # 2015 carnegie classification: keep research universities (15,16,17) and master's universities (18,19,20)
+  filter(c15basic %in% c(15,16,17,18,19,20)) %>%
+  # which variables to keep
+  select(instnm,unitid,opeid6,opeid,control,c15basic,stabbr,city,zip,locale,obereg, # basic institutional characteristics
+         tuition6,fee6,tuition7,fee7, # avg tuition and fees for full-time grad, in-state and out-of-state
+         isprof3,ispfee3,osprof3,ospfee3, # avg tuition and fees for MD, in-state and out-of-state
+         isprof9,ispfee9,osprof9,ospfee9, # avg tuition and fees for Law, in-state and out-of-state
+         chg4ay3,chg7ay3,chg8ay3) %>% # [undergraduate] books+supplies; off-campus (not with family) room and board; off-campus (not with family) other expenses
+  # rename variables; syntax <new_name> = <old_name>
+  rename(region = obereg, # revion
+         tuit_grad_res = tuition6, fee_grad_res = fee6, tuit_grad_nres = tuition7, fee_grad_nres = fee7, # grad
+         tuit_md_res = isprof3, fee_md_res = ispfee3, tuit_md_nres = osprof3, fee_md_nres = ospfee3, # md
+         tuit_law_res = isprof9, fee_law_res = ispfee9, tuit_law_nres = osprof9, fee_law_nres = ospfee9, # law
+         books_supplies = chg4ay3, roomboard_off = chg7ay3, oth_expense_off = chg8ay3) %>% # [undergraduate] expenses
+  # create measures of tuition+fees
+  mutate(
+    tuitfee_grad_res = tuit_grad_res + fee_grad_res, # graduate, state resident
+    tuitfee_grad_nres = tuit_grad_nres + fee_grad_nres, # graduate, non-resident
+    tuitfee_md_res = tuit_md_res + fee_md_res, # MD, state resident
+    tuitfee_md_nres = tuit_md_nres + fee_md_nres, # MD, non-resident
+    tuitfee_law_res = tuit_law_res + fee_law_res, # Law, state resident
+    tuitfee_law_nres = tuit_law_nres + fee_law_nres) %>% # Law, non-resident  
+  # create measures of cost-of-attendance (COA) as the sum of tuition, fees, book, living expenses
+  mutate(
+    coa_grad_res = tuit_grad_res + fee_grad_res + books_supplies + roomboard_off + oth_expense_off, # graduate, state resident
+    coa_grad_nres = tuit_grad_nres + fee_grad_nres + books_supplies + roomboard_off + oth_expense_off, # graduate, non-resident
+    coa_md_res = tuit_md_res + fee_md_res + books_supplies + roomboard_off + oth_expense_off, # MD, state resident
+    coa_md_nres = tuit_md_nres + fee_md_nres + books_supplies + roomboard_off + oth_expense_off, # MD, non-resident
+    coa_law_res = tuit_law_res + fee_law_res + books_supplies + roomboard_off + oth_expense_off, # Law, state resident
+    coa_law_nres = tuit_law_nres + fee_law_nres + books_supplies + roomboard_off + oth_expense_off) %>% # Law, non-resident    
+  # keep only observations that have non-missing values for the variable coa_grad_res
+    # this does cause us to lose some interesting universities, but doing this will eliminate some needless complications with respect to learning core concepts about statistical inference
+  filter(!is.na(coa_grad_res))
+
+# Add variable labels to the tuit+fees variables and coa variables
+  # tuition + fees variables
+    var_label(df_ipeds_pop[['tuitfee_grad_res']]) <- 'graduate, full-time, resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_grad_nres']]) <- 'graduate, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_res']]) <- 'MD, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_nres']]) <- 'MD, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_res']]) <- 'Law, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_nres']]) <- 'Law, full-time, non-resident; avg tuition + required fees'
+    
+  # COA variables
+    var_label(df_ipeds_pop[['coa_grad_res']]) <- 'graduate, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_grad_nres']]) <- 'graduate, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_res']]) <- 'MD, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_nres']]) <- 'MD, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_res']]) <- 'Law, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_nres']]) <- 'Law, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+
+df_ipeds_pop %>% glimpse()
+
+##########
+########## Create data frame of generated variables, with each variable meant to represent the entire population
+##########
+
+
+num_obs <- 10000
+
+# Generate normal distribution w/ custom mean and sd
+set.seed(124)
+norm_dist <- rnorm(n = num_obs, mean = 50, sd = 5)
+
+# Generate right-skewed distribution
+set.seed(124)
+rskew_dist <- rbeta(n = num_obs, shape1 = 2, shape2 = 5)
+
+# Generate left-skewed distribution
+set.seed(124)
+lskew_dist <- rbeta(n = num_obs, shape1 = 5, shape2 = 2)
+
+# Generate standard normal distribution (default is mean = 0 and sd = 1)
+set.seed(124)
+stdnorm_dist <- rnorm(n = num_obs, mean = 0, sd = 1)  # equivalent to rnorm(10)
+
+# Create dataframe
+df_generated_pop <- data.frame(norm_dist, rskew_dist, lskew_dist, stdnorm_dist)
+
+# drop individual objects associated with each variable
+rm(norm_dist,rskew_dist,lskew_dist,stdnorm_dist)
+rm(num_obs)
+
+
+##########
+########## Create sample versions of generated population data frame and IPEDS population data frame
+##########
+
+# create sample version of our generated data
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_generated_sample <- df_generated_pop %>% sample_n(size = 200)
+  df_generated_sample %>% glimpse()
+
+
+# create sample version of our ipeds data
+
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_ipeds_sample <- df_ipeds_pop %>% sample_n(size = 200) 
+  
+  # compare mean of coa_grad_res between population and sample
+  mean(df_ipeds_pop$coa_grad_res, na.rm = TRUE)
+  mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE)
+
+# filtered data frame for categorical based on institution control
+df_ipeds_filtered <- df_ipeds_pop %>% filter(control %in% c(1, 2))
+
+# these two vars in the model
+df_ipeds_filtered %>% select(control,tuit_grad_res) %>% glimpse()
+```
+
+
+2. Let's investigate the out-of-state cost for full-time graduate students in `df_ipeds_filtered`. To investigate the relationship between institutional control and out-of-state cost for full-time graduate student, which is $X$ and which is $Y$?
+
+
+**ANSWER:**
+
+**ANSWER KEY:**
+- $X_i$: is institutional control (public university `1`; or private non-profit university `2`), measured by the variable `control`
+- $Y$: is cost, measured by the variable `coa_grad_nres`, which is the out-of-state cost for full-time graduates.
+
+3. Show what the average cost, separated for public vs. private would be
+
+```{r}
+#ANSWER KEY
+# average cost, separately for public vs. private
+df_ipeds_filtered %>% group_by(control) %>% summarize(
+  avg_tuit = mean(coa_grad_nres, na.rm = TRUE)
+)
+
+```
+
+
+4. Run the regression model. Interpret your findings.
+
+```{r}
+#Answer Key
+coamod1 <- lm(formula = coa_grad_nres ~ control, data = df_ipeds_filtered)
+
+summary(coamod1)
+```
+
+**ANSWER:**
+
+**ANSWER KEY:**
+(Student response should cover R^2 and p-value and give general interpretation of what they think the relationship is between cost for out-of-state graduates and institutional control)
+
+## Question 4: Confidence Interval
+
+1. What is a confidence interval? Give an example of how you would phrase findings that fall within a 95% confidence interval.
+
+**ANSWER:**
+
+**ANSWER KEY:**
+A confidence interval (CI) is a range of values that’s likely to include a population value with a certain degree of confidence. For example (hypothetical), "we are 95% sure that President Biden's approval rating among adults in the US lies somewhere between 45% and 49%"
+
+2. Calculate the both the 95% and 99% confidence interval for the relationship between institutional control and out-of-state cost for full-time graduate students in `df_ipeds_filtered`. Interpret your findings.
+
+
+```{r}
+
+# ANSWER KEY
+# 95 percent confidence interval
+confint(coamod1, level = 0.95)
+
+# 99 percent confidence interval
+confint(coamod1, level = 0.99)
+
+```
+
+**ANSWER:**
+
+**ANSWER KEY:**
+We are 95% confident that the population intercept falls between 37,535.25 and 42,325.96. This means that if we repeated this study multiple times, 95% of the confidence intervals would contain the true population intercept.
+
+We are 99% confident that the population intercept falls between 36,780.19 and 43,081.02. This means that if we repeated this study multiple times, 99% of the confidence intervals would contain the true population intercept.
+
+
+# Render to pdf and submit problem set 
+
+**Render to pdf** by clicking the "Render" button near the top of your RStudio window (icon with blue arrow) or drop down "File" and select "Render to PDF"
+
+- Go to the [class website] (Need to fill in classwebsite) and under the "Readings & Assignments" >> "Week 9" tab, click on the "Problem set 4 submission link"  
+- Submit both .qmd and pdf files  
+- Use this naming convention "lastname_firstname_ps#" for your .qmd and pdf files (e.g. lee_belle_ps4.qmd & lee_belle_ps4.pdf)  
+
