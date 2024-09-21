@@ -1,0 +1,304 @@
+---
+title: "Social Sciences Intro to Statistics"
+subtitle: "Week 9.1 Interpretation of Beta hat with Categorical Variables"
+format: pdf
+editor: source
+---
+Week 9: Learning goal - Acquire understanding of beta hat with categorical variables, confidence intervals, and assumptions. 
+
+ 
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", highlight = TRUE, warning = FALSE, message = FALSE)
+  #comment = "#>" makes it so results from a code chunk start with "#>"; default is "##"
+```
+
+# Introduction
+Lecture overview:
+
+Regression with categorical variables: 
+	- introduce factors
+	- introduce reference groups
+	- interpretation of estimate on categorical X
+	- hypothesis testing	
+
+Load packages:
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(labelled)
+library(patchwork)
+
+# Load ipeds dataset from course website
+load(url('https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/ipeds/output_data/panel_data.RData'))
+```
+
+
+```{r, echo=FALSE}
+# Create ipeds data frame with fewer variables/observations
+df_ipeds_pop <- panel_data %>%
+  # keep data from fall 2022
+  filter(year == 2022) %>%
+  # which universities to keep:
+    # 2015 carnegie classification: keep research universities (15,16,17) and master's universities (18,19,20)
+  filter(c15basic %in% c(15,16,17,18,19,20)) %>%
+  # which variables to keep
+  select(instnm,unitid,opeid6,opeid,control,c15basic,stabbr,city,zip,locale,obereg, # basic institutional characteristics
+         tuition6,fee6,tuition7,fee7, # avg tuition and fees for full-time grad, in-state and out-of-state
+         isprof3,ispfee3,osprof3,ospfee3, # avg tuition and fees for MD, in-state and out-of-state
+         isprof9,ispfee9,osprof9,ospfee9, # avg tuition and fees for Law, in-state and out-of-state
+         chg4ay3,chg7ay3,chg8ay3) %>% # [undergraduate] books+supplies; off-campus (not with family) room and board; off-campus (not with family) other expenses
+  # rename variables; syntax <new_name> = <old_name>
+  rename(region = obereg, # revion
+         tuit_grad_res = tuition6, fee_grad_res = fee6, tuit_grad_nres = tuition7, fee_grad_nres = fee7, # grad
+         tuit_md_res = isprof3, fee_md_res = ispfee3, tuit_md_nres = osprof3, fee_md_nres = ospfee3, # md
+         tuit_law_res = isprof9, fee_law_res = ispfee9, tuit_law_nres = osprof9, fee_law_nres = ospfee9, # law
+         books_supplies = chg4ay3, roomboard_off = chg7ay3, oth_expense_off = chg8ay3) %>% # [undergraduate] expenses
+  # create measures of tuition+fees
+  mutate(
+    tuitfee_grad_res = tuit_grad_res + fee_grad_res, # graduate, state resident
+    tuitfee_grad_nres = tuit_grad_nres + fee_grad_nres, # graduate, non-resident
+    tuitfee_md_res = tuit_md_res + fee_md_res, # MD, state resident
+    tuitfee_md_nres = tuit_md_nres + fee_md_nres, # MD, non-resident
+    tuitfee_law_res = tuit_law_res + fee_law_res, # Law, state resident
+    tuitfee_law_nres = tuit_law_nres + fee_law_nres) %>% # Law, non-resident  
+  # create measures of cost-of-attendance (COA) as the sum of tuition, fees, book, living expenses
+  mutate(
+    coa_grad_res = tuit_grad_res + fee_grad_res + books_supplies + roomboard_off + oth_expense_off, # graduate, state resident
+    coa_grad_nres = tuit_grad_nres + fee_grad_nres + books_supplies + roomboard_off + oth_expense_off, # graduate, non-resident
+    coa_md_res = tuit_md_res + fee_md_res + books_supplies + roomboard_off + oth_expense_off, # MD, state resident
+    coa_md_nres = tuit_md_nres + fee_md_nres + books_supplies + roomboard_off + oth_expense_off, # MD, non-resident
+    coa_law_res = tuit_law_res + fee_law_res + books_supplies + roomboard_off + oth_expense_off, # Law, state resident
+    coa_law_nres = tuit_law_nres + fee_law_nres + books_supplies + roomboard_off + oth_expense_off) %>% # Law, non-resident    
+  # keep only observations that have non-missing values for the variable coa_grad_res
+    # this does cause us to lose some interesting universities, but doing this will eliminate some needless complications with respect to learning core concepts about statistical inference
+  filter(!is.na(coa_grad_res))
+
+# Add variable labels to the tuit+fees variables and coa variables
+  # tuition + fees variables
+    var_label(df_ipeds_pop[['tuitfee_grad_res']]) <- 'graduate, full-time, resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_grad_nres']]) <- 'graduate, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_res']]) <- 'MD, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_md_nres']]) <- 'MD, full-time, non-resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_res']]) <- 'Law, full-time, state resident; avg tuition + required fees'
+    var_label(df_ipeds_pop[['tuitfee_law_nres']]) <- 'Law, full-time, non-resident; avg tuition + required fees'
+    
+  # COA variables
+    var_label(df_ipeds_pop[['coa_grad_res']]) <- 'graduate, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_grad_nres']]) <- 'graduate, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_res']]) <- 'MD, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_md_nres']]) <- 'MD, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_res']]) <- 'Law, full-time, state resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+    var_label(df_ipeds_pop[['coa_law_nres']]) <- 'Law, full-time, non-resident COA; == tuition + fees + (ug) books/supplies + (ug) off-campus room and board + (ug) off-campus other expenses'
+
+df_ipeds_pop %>% glimpse()
+
+
+##########
+########## Create data frame of generated variables, with each variable meant to represent the entire population
+##########
+
+
+num_obs <- 10000
+
+# Generate normal distribution w/ custom mean and sd
+set.seed(124)
+norm_dist <- rnorm(n = num_obs, mean = 50, sd = 5)
+
+# Generate right-skewed distribution
+set.seed(124)
+rskew_dist <- rbeta(n = num_obs, shape1 = 2, shape2 = 5)
+
+# Generate left-skewed distribution
+set.seed(124)
+lskew_dist <- rbeta(n = num_obs, shape1 = 5, shape2 = 2)
+
+# Generate standard normal distribution (default is mean = 0 and sd = 1)
+set.seed(124)
+stdnorm_dist <- rnorm(n = num_obs, mean = 0, sd = 1)  # equivalent to rnorm(10)
+
+# Create dataframe
+df_generated_pop <- data.frame(norm_dist, rskew_dist, lskew_dist, stdnorm_dist)
+
+# drop individual objects associated with each variable
+rm(norm_dist,rskew_dist,lskew_dist,stdnorm_dist)
+rm(num_obs)
+
+
+##########
+########## Create sample versions of generated population data frame and IPEDS population data frame
+##########
+
+# create sample version of our generated data
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_generated_sample <- df_generated_pop %>% sample_n(size = 200)
+  df_generated_sample %>% glimpse()
+
+
+# create sample version of our ipeds data
+
+  set.seed(124) # set seed so that everyone ends up with the same random sample
+  
+  df_ipeds_sample <- df_ipeds_pop %>% sample_n(size = 200) 
+  
+  # compare mean of coa_grad_res between population and sample
+  mean(df_ipeds_pop$coa_grad_res, na.rm = TRUE)
+  mean(df_ipeds_sample$coa_grad_res, na.rm = TRUE)
+
+##########
+########## STAR DATA
+##########
+
+# load star data
+load(url("https://raw.githubusercontent.com/bcl96/Social-Sciences-Stats/main/data/star/star_panel_data.RData"))
+
+#df_star_panel %>% glimpse()
+
+# create data frame for STAR experiment, keeping only kindergarten
+df_stark <- df_star_panel %>% 
+  # keep only kindergarten year
+  filter(grade ==1) %>% 
+  # keep only observations with non-missing value for reading score
+  filter(!is.na(read)) %>%
+  # keep only observations with non-missing values for treatment assignment
+  filter(!is.na(star)) %>%
+  # drop observations where treatment status is regular+aide
+  filter(star !=3) %>%
+  # keep selected variables
+  select(id,grade,star,read,gender,ethnicity,lunch,school,degree,experience) %>%
+  # create a variable "treatment" that equals 1 if student receives treatment (small class) and equals 0 otherwise
+  mutate(
+    treatment = if_else(star==2,1,0)
+  )
+
+
+df_stark %>% glimpse()
+```
+
+## Understanding Categorical Variables
+
+Many independent variables you will investigate are categorical rather than continuous. Today, we will focus on interpreting $\hat{\beta_1}$ associated with a categorical $X$ variable
+
+First, how do you distinguish between continuous and categorical variables when running regression?
+
+- Continous variables:
+  - Difference between one value and another is quantitative
+  - e.g., SAT score of 900 vs. 1000; income of $40k vs $45k, GPA of 2.0 vs. 2.1
+  
+  
+- Categorical variables: 
+  - Difference between one value and another cannot be measured quantitatively
+  - e.g., race/ethnicity, parent education is B.A. vs M.D., political ideology
+
+Many program evaluation questions involve a categorical independent variable of interest
+
+  - What is the effect of receiving a Pell grant on on-time college completion? 
+  - What is the effect of participating in Mexican American Studies program on high school graduation?
+  - What is the effect of Head Start pre-k on Kindergarten reading levels? 
+  - What is the effect of class size (small vs large) on student learning? 
+
+### General Steps for Regression with Categorical $X$
+
+- Identify categories of $X$ and choose a "reference" group
+  - The “reference group” or “base level” is the group that all other groups will be compared to
+- Create separate 0/1 variables for each category of $X$
+  - (Instead of doing this, we will just include the factor class independent variable in our regression model, and *R* will create the 0/1 variables for each category "on the fly"
+- Write out population model and OLS regression line
+- Run regression in R
+- Interpret estimates
+
+Steps to interpret $\hat{\beta_1}$ with categorical $X$ variable
+
+- Start with a two-category $X$ variable (sometimes called a "dichotomous" variable or a "0/1" variable or a "dummy" variable)
+- All the key ideas we explain when $X$ is a two-category variable will also be true when $X$ has more than two categories
+- Then, we'll discuss interpretation when the categorical variable has more than two categories
+
+## Two-category $X$ variable
+
+In order to practice interpretation of $\hat{\beta}_1$ when $X$ is is a two-category independent variable, we'll investigate the relationship between institutional control ($X$) and in-state tuition ($Y$) for full-time graduates using the data frame `df_ipeds_filtered`
+
+- $X_i$: is institutional control (public university `1`; or private non-profit university `2`), measured by the variable `control`
+- $Y$: is tuition, measured by the variable `tuit_grad_res`, which is the in-state average tuition for full-time graduates.
+
+Investigate variables in the model
+```{r}
+df_ipeds_filtered <- df_ipeds_pop %>% filter(control %in% c(1, 2))
+
+# these two vars in the model
+df_ipeds_filtered %>% select(control,tuit_grad_res) %>% glimpse()
+
+# control is a factor variable
+df_ipeds_filtered $control %>% typeof()
+df_ipeds_filtered $control %>% class()
+
+# levels attribute; these are the labels attached to the underlying integer data
+df_ipeds_filtered $control %>% attributes()
+attr(x= df_ipeds_filtered $control, which = 'levels')
+
+# frequency count
+df_ipeds_filtered %>% count(control)
+df_ipeds_filtered %>% count(as.integer(control))
+  # so in the underlying data: 1 refers to private universities, 2 refers to public universities
+
+# average earnings, separately for public vs. private
+df_ipeds_filtered %>% group_by(control) %>% summarize(
+  avg_tuit = mean(tuit_grad_res, na.rm = TRUE)
+)
+```
+
+Run regression model
+```{r}
+tuitmod2 <- lm(formula = tuit_grad_res ~ control, data = df_ipeds_filtered)
+
+summary(tuitmod2)
+```
+
+## Present research question and models
+
+- Research question
+  - posed in a correlational way:
+    - What is the relationship between attending a private university ($X=1$) vs. attending a public university ($X=0$) and in-state tuition ($Y$) for full-time graduates?
+  - posed in a causal effects way:
+    - What is the effect of attending a private university ($X=1$) vs. attending a public university ($X=0$) on in-state tuition ($Y$) for for full-time graduates?
+- Population Linear Regression Model
+  - $Y_i = \beta_0 + \beta_1X_i + u_i$
+  - where:
+    - $Y_i$: in-state tuition (in dollars) at university $i$ (measured by variable `tuit_grad_res`)
+    - $X_i$: is institutional control, measured by the factor variable `control`, where:
+      - underlying value `1` is associated with "public"
+      - underlying value `2` is associated with "private"
+      - **note**: R will automatically assign the lowest value of X as your "reference" category!
+        - "public" universities are the "reference category"
+        - "private" universities are the "non-reference category"
+    - $\beta_1$: population regression coefficient associated with being the non-reference category as opposed to the reference category
+    - $\beta_0$: population intercept; average value of $Y$ when $X=0$ 
+      - this is the average value of $Y$ when $X$ is the reference group category
+- OLS Prediction Line (without estimates)
+   - $\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1}X_i$
+- OLS Prediction Line (with estimates)   
+   - $\hat{Y_i} =$  `r format(round(summary(tuitmod2)$coefficients[1,1], digits =2),big.mark = ',')` + `r format(round(summary(tuitmod2)$coefficients[2,1], digits =2),big.mark = ',')` $\times X_i$
+
+## Reference Groups
+
+Which category of $X$ should you choose as a reference group?
+
+- It doesn't really matter
+- Substantively, results are **exactly** the same regardless of which reference group you choose, although choice of reference group often change how a reader interprets results (especially a reader who does not know statistics)
+- General rule of thumb: choose a reference group that does not have a small number of observations
+- But you don't need to choose reference group as the group with the largest number of observations
+- Why not choose a reference group that has a very small number of observations
+  - we are trying to make inferences about populations based on sample data
+  - for category of $X$ where we have very few observations, this is like taken a tiny sample from the population
+  - when our sample is tiny our estimates from this sample are very imprecise
+  - if we choose a group with has very few observations as our reference group, our interpretation of each non reference group $\beta_{k}$ is made with reference to a group that we have very imprecise knowledge about due to small sample size
+
+
+
+
+
+
+
+
+
+
+
